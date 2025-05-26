@@ -1,200 +1,202 @@
+#Instala e inicia o pygame
 import pygame
 import random
+pygame.init()  
+pygame.mixer.init()
 
-pygame.init()
+# Variaveis importantes
+NADA = 0
+dificuldadedojogo = 0
 
-# Constantes
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-SPEED = 6
-BOOST_SPEED = 12
+# Prepara as musicas do jogo
+musicamenu = pygame.mixer.Sound("Downloads\Audio - Songs\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads\Audio - Songs\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
 
-OBSTACLE_WIDTH = 40
-OBSTACLE_HEIGHT = 70
-OBSTACLE_SPEED = 4
-SPAWN_TIMER = 0
-SPAWN_INTERVAL = 60
+# Define modos do jogo
+menuactive = True
+tutorialactive = False
+dificuldadeactive = False
+gameactive = False
+paused = False  # Novo estado de pausa
 
-BULLET_WIDTH = 5
-BULLET_HEIGHT = 10
-BULLET_SPEED = 10
-
-BUILDING_SPEED = 2
-ROAD_OFFSET = 0
-
-# Inicialização
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("OverDrive: Street Racer")
-clock = pygame.time.Clock()
-
-# Fontes
-font = pygame.font.SysFont(None, 48)
-
-# Entidades
-player = pygame.Rect((375, 500, 40, 70))
-hitbox = pygame.Rect(player.x + 5, player.y + 5, 30, 60)
-obstacles = []
-bullets = []
+second = 0
 score = 0
+score_timer = 0
+fonte = pygame.font.SysFont(None, 36)  # Fonte para score
 
-def generate_buildings():
-    buildings_left = []
-    buildings_right = []
-    for i in range(0, SCREEN_HEIGHT, 100):
-        height = random.randint(80, 150)
-        rect_left = pygame.Rect(20, i, 100, height)
-        rect_right = pygame.Rect(680, i, 100, height)
-        color_left = random.choice([(255, 255, 100), (255, 200, 150)])
-        color_right = random.choice([(255, 255, 150), (200, 255, 200)])
-        buildings_left.append((rect_left, color_left))
-        buildings_right.append((rect_right, color_right))
-    return buildings_left, buildings_right
+# Cria um objeto clock. Ai separa o jogo a rodar a 60 FPS
+clock = pygame.time.Clock()
+clock.tick(60)
 
-left_buildings, right_buildings = generate_buildings()
+# Definindo sprites do menu
+botao_menu_jogo = pygame.image.load("Downloads\Images - Menu\Botao_Jogar.png")
+botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200,80))
+botao_menu_tutorial = pygame.image.load("Downloads\Images - Menu\Botao_Tutorial.png")
+botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200,80))
+botao_dificuldade_easy = pygame.image.load("Downloads\Images - Menu\Botao_easy_dificuldade.png")
+botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (128,128))
+botao_dificuldade_hard = pygame.image.load("Downloads\Images - Menu\Botao_hard_dificuldade.png")
+botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (128,128))
+mago_eastergg = pygame.image.load("Downloads\Images - Sprites\The Mage (IDK).png")
+mago_eastergg = pygame.transform.scale(mago_eastergg, (128, 128))
 
-def update_buildings(buildings_list):
-    for i in range(len(buildings_list)):
-        rect, color = buildings_list[i]
-        rect.y += BUILDING_SPEED
-        if rect.top > SCREEN_HEIGHT:
-            height = random.randint(80, 150)
-            new_rect = pygame.Rect(rect.x, -height, rect.width, height)
-            new_color = random.choice([(255, 255, 100), (255, 200, 150), (255, 255, 150), (200, 255, 200)])
-            buildings_list[i] = (new_rect, new_color)
+# Planos de fundo
+backgroundsize = (1024,512)
+menu = pygame.image.load("Downloads\Images - Menu\Overdrift_Menu.png")
+menu = pygame.transform.scale(menu, backgroundsize)
+mapa = pygame.image.load("Downloads\Images - Menu\Overdriftmap_V0.png")
+mapa = pygame.transform.scale(mapa, backgroundsize)
+dificuldade = pygame.image.load("Downloads\Images - Menu\Overdrift_dificulty_Correct.png")
+dificuldade = pygame.transform.scale(dificuldade, backgroundsize)
+tutorial = pygame.image.load("Downloads\Images - Menu\Botao_Tutorial.png")
+tutorial = pygame.transform.scale(tutorial, backgroundsize)
 
-def draw_racetrack():
-    screen.fill((10, 10, 25))
-    update_buildings(left_buildings)
-    update_buildings(right_buildings)
+# Sprites do jogo
+carro_mc = pygame.image.load("Downloads\Images - Sprites\Carro_MC_V1.png")
+carro_mc = pygame.transform.scale(carro_mc, (64, 64))
+carro_obstaculo1 = pygame.image.load("Downloads\Images - Sprites\Carro_Obstaculo_(Ciano).png")
+carro_obstaculo1 = pygame.transform.scale(carro_obstaculo1, (64, 64))
+onibus_obstaculo = pygame.image.load("Downloads\Images - Sprites\Onibus_Obstaculo_V0.png")
+onibus_obstaculo = pygame.transform.scale(onibus_obstaculo, (64, 128))
+explosao = pygame.image.load("Downloads\Images - Sprites\Explosão_derrota.png")
+explosao = pygame.transform.scale(explosao, (128, 128))
 
-    global ROAD_OFFSET
-    if random.random() < 0.01:
-        ROAD_OFFSET = random.choice([-1, 0, 1])
-    for i in range(len(left_buildings)):
-        left_buildings[i][0].x += ROAD_OFFSET
-        right_buildings[i][0].x += ROAD_OFFSET
+# Display
+largura_tela = 1024
+altura_tela = 512
+display_surface = pygame.display.set_mode((largura_tela, altura_tela))
+pygame.display.set_icon(carro_mc)
+pygame.display.set_caption('OverDrift.exe')
 
-    for rect, color in left_buildings:
-        pygame.draw.rect(screen, (60, 60, 100), rect)
-        for x in range(rect.x + 10, rect.right - 10, 20):
-            for y in range(rect.y + 20, rect.bottom - 10, 25):
-                pygame.draw.rect(screen, color, (x, y, 10, 10))
+running = True
+musicajatocando = False
 
-    for rect, color in right_buildings:
-        pygame.draw.rect(screen, (80, 80, 110), rect)
-        for x in range(rect.x + 10, rect.right - 10, 20):
-            for y in range(rect.y + 20, rect.bottom - 10, 25):
-                pygame.draw.rect(screen, color, (x, y, 10, 10))
+# Reset do jogo
+def resetar_jogo():
+    global carro_rect, obstaculos, musicajatocando, score, score_timer
+    score = 0
+    score_timer = 0
+    carro_rect = carro_mc.get_rect(center=(512, 400))
+    obstaculos = []
+    for _ in range(5):
+        tipo = random.choice(["carro", "onibus"])
+        if tipo == "carro":
+            obstaculo = carro_obstaculo1.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -64)))
+        else:
+            obstaculo = onibus_obstaculo.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -128)))
+        obstaculos.append((tipo, obstaculo))
+    musicajatocando = False
 
-    pygame.draw.rect(screen, (30, 30, 30), (150, 0, 500, SCREEN_HEIGHT))
-    pygame.draw.rect(screen, (0, 255, 255), (150, 0, 5, SCREEN_HEIGHT))
-    pygame.draw.rect(screen, (255, 0, 255), (645, 0, 5, SCREEN_HEIGHT))
-    pygame.draw.rect(screen, (120, 120, 120), (155, 0, 5, SCREEN_HEIGHT))
-    pygame.draw.rect(screen, (120, 120, 120), (640, 0, 5, SCREEN_HEIGHT))
+resetar_jogo()
 
-    for y in range(0, SCREEN_HEIGHT, 40):
-        pygame.draw.rect(screen, (180, 180, 255), (395, y, 10, 20))
+while running:
+    ms = clock.tick(60)
+    tecla = pygame.key.get_pressed()
 
-    for x in range(160, 640, 120):
-        pygame.draw.rect(screen, (100, 100, 255), (x, 0, 5, 30))
+    if not gameactive and not musicajatocando:
+        pygame.mixer.music.set_volume(0.0001)
+        musicamenu.play(-1)
+        musicajatocando = True
+    elif gameactive and not musicajatocando:
+        pygame.mixer.stop()
+        musicajogo.play(-1)
+        musicajatocando = True
 
-def draw_pause_text():
-    text = font.render("PAUSE - Pressione P para continuar", True, (255, 255, 255))
-    rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-    screen.blit(text, rect)
-    pygame.display.flip()
+    if menuactive:
+        hitboxbotaomenujogo = botao_menu_jogo.get_rect(topleft=(250, 300))
+        hitboxbotaomenututorial = botao_menu_tutorial.get_rect(topleft=(575, 300))
+        display_surface.blit(menu, (0, 0))
+        display_surface.blit(botao_menu_jogo, (250, 300))
+        display_surface.blit(botao_menu_tutorial, (575, 300))
 
-def draw_explosion(x, y):
-    for _ in range(10):
-        radius = random.randint(5, 20)
-        color = random.choice([(255, 100, 0), (255, 200, 0), (255, 255, 255)])
-        offset_x = random.randint(-20, 20)
-        offset_y = random.randint(-20, 20)
-        pygame.draw.circle(screen, color, (x + offset_x, y + offset_y), radius)
-    pygame.display.update()
-    pygame.time.delay(500)
+    if tutorialactive:
+        display_surface.blit(tutorial, (0,0))
 
-# Loop principal
-run = True
-paused = False
-while run:
+    if dificuldadeactive:
+        hitboxbotaodificuldadeeasy = botao_dificuldade_easy.get_rect(topleft=(320, 300))
+        hitboxbotaodificuldadehard = botao_dificuldade_hard.get_rect(topleft=(640, 300))
+        display_surface.blit(dificuldade, (0,0))
+        display_surface.blit(botao_dificuldade_easy, (320, 300))
+        display_surface.blit(botao_dificuldade_hard, (640, 300))
+        if tecla[pygame.K_m] and tecla[pygame.K_a] and tecla[pygame.K_g]:
+            display_surface.blit(mago_eastergg, (1024-128, 512-128))
+            pygame.display.set_caption('Mago da internet! Parabéns em achar um easter egg!')
+
+    if gameactive and not paused:
+        second += ms/1000
+        score_timer += ms
+        if score_timer >= 1000:
+            score += 1
+            score_timer = 0
+
+        display_surface.blit(mapa, (0,0))
+
+        velocidade = 5
+        if tecla[pygame.K_w]: carro_rect.y -= velocidade
+        if tecla[pygame.K_s]: carro_rect.y += velocidade
+        if tecla[pygame.K_a]: carro_rect.x -= velocidade
+        if tecla[pygame.K_d]: carro_rect.x += velocidade
+        carro_rect.clamp_ip(display_surface.get_rect())
+
+        display_surface.blit(carro_mc, carro_rect.topleft)
+
+        for tipo, obstaculo in obstaculos:
+            obstaculo.y += 5
+            if tipo == "carro":
+                display_surface.blit(carro_obstaculo1, obstaculo.topleft)
+            else:
+                display_surface.blit(onibus_obstaculo, obstaculo.topleft)
+            if carro_rect.colliderect(obstaculo):
+                display_surface.blit(explosao, carro_rect.topleft)
+                pygame.display.update()
+                pygame.time.delay(1000)
+                gameactive = False
+                menuactive = True
+                resetar_jogo()
+                break
+            if obstaculo.top > altura_tela:
+                obstaculo.y = random.randint(-600, -64)
+                obstaculo.x = random.randint(0, largura_tela-64)
+
+        # Exibir score
+        texto_score = fonte.render(f"Score: {score}", True, (255, 255, 255))
+        display_surface.blit(texto_score, (10, 10))
+
+    elif paused and gameactive:
+        texto_pause = fonte.render("PAUSADO - Aperte P para voltar", True, (255, 255, 0))
+        display_surface.blit(texto_pause, (300, 250))
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            run = False
+            running = False
+
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_p:
-                paused = not paused
-            if event.key == pygame.K_SPACE and not paused:
-                bullet = pygame.Rect(player.centerx - BULLET_WIDTH // 2, player.top - BULLET_HEIGHT, BULLET_WIDTH, BULLET_HEIGHT)
-                bullets.append(bullet)
+            if tutorialactive:
+                menuactive = True
+                tutorialactive = False
+            if dificuldadeactive and event.key == pygame.K_ESCAPE:
+                menuactive = True
+                dificuldadeactive = False
+            if gameactive and event.key == pygame.K_p:
+                paused = not paused  # Alterna entre pausado e ativo
 
-    if paused:
-        draw_pause_text()
-        clock.tick(10)
-        continue
+        elif event.type == pygame.MOUSEBUTTONDOWN:   
+            if hitboxbotaomenujogo.collidepoint(event.pos) and menuactive:  
+                menuactive = False
+                dificuldadeactive = True
+            elif hitboxbotaomenututorial.collidepoint(event.pos) and menuactive:  
+                menuactive = False
+                tutorialactive = True
+            elif dificuldadeactive:
+                if hitboxbotaodificuldadeeasy.collidepoint(event.pos):  
+                    gameactive = True
+                    dificuldadeactive = False
+                    resetar_jogo()
+                if hitboxbotaodificuldadehard.collidepoint(event.pos):  
+                    gameactive = True
+                    dificuldadeactive = False
+                    resetar_jogo()
 
-    draw_racetrack()
-
-    # Desenha carro do jogador
-    pygame.draw.rect(screen, (0, 200, 0), player)  # Verde escuro
-    pygame.draw.rect(screen, (0, 100, 0), (player.x + 10, player.y + 10, 20, 50))  # Corpo interno
-    pygame.draw.rect(screen, (0, 0, 255), hitbox, 2)
-
-    # Movimento
-    key = pygame.key.get_pressed()
-    dx = dy = 0
-    current_speed = BOOST_SPEED if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT] else SPEED
-
-    if key[pygame.K_a]: dx = -current_speed
-    if key[pygame.K_d]: dx = current_speed
-    if key[pygame.K_w]: dy = -current_speed
-    if key[pygame.K_s]: dy = current_speed
-
-    player.x += dx
-    player.y += dy
-    player.clamp_ip(pygame.Rect(150, 0, 500, SCREEN_HEIGHT))
-    hitbox.x, hitbox.y = player.x + 5, player.y + 5
-
-    # Obstáculos
-    SPAWN_TIMER += 1
-    if SPAWN_TIMER >= SPAWN_INTERVAL:
-        obstacle_x = random.randint(160, 640 - OBSTACLE_WIDTH)
-        obstacle = pygame.Rect(obstacle_x, -OBSTACLE_HEIGHT, OBSTACLE_WIDTH, OBSTACLE_HEIGHT)
-        obstacles.append(obstacle)
-        SPAWN_TIMER = 0
-
-    for obstacle in obstacles[:]:
-        obstacle.y += OBSTACLE_SPEED
-        pygame.draw.rect(screen, (200, 0, 0), obstacle)  # Carro inimigo
-        pygame.draw.rect(screen, (150, 0, 0), (obstacle.x + 5, obstacle.y + 10, 30, 50))  # Corpo interno
-        if obstacle.top > SCREEN_HEIGHT:
-            obstacles.remove(obstacle)
-
-    for bullet in bullets[:]:
-        bullet.y -= BULLET_SPEED
-        pygame.draw.rect(screen, (255, 255, 0), bullet)
-        if bullet.bottom < 0:
-            bullets.remove(bullet)
-        else:
-            for obstacle in obstacles[:]:
-                if bullet.colliderect(obstacle):
-                    obstacles.remove(obstacle)
-                    if bullet in bullets:
-                        bullets.remove(bullet)
-                    break
-
-    if not (key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]):
-        for obstacle in obstacles:
-            if hitbox.colliderect(obstacle):
-                draw_explosion(player.centerx, player.centery)
-                run = False
-
-    # Pontuação
-    score += 1
-    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-    screen.blit(score_text, (10, 10))
-
-    pygame.display.flip()
-    clock.tick(60)
+    pygame.display.update()
 
 pygame.quit()
