@@ -112,7 +112,6 @@ while running:
 
     if gameactive == True:
         display_surface.blit(mapa, (0,0))
-        
 
     if gameactive == True:
         NADA = 0

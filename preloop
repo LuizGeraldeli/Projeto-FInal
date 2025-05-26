@@ -1,0 +1,200 @@
+import pygame
+import random
+
+pygame.init()
+
+# Constantes
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+SPEED = 6
+BOOST_SPEED = 12
+
+OBSTACLE_WIDTH = 40
+OBSTACLE_HEIGHT = 70
+OBSTACLE_SPEED = 4
+SPAWN_TIMER = 0
+SPAWN_INTERVAL = 60
+
+BULLET_WIDTH = 5
+BULLET_HEIGHT = 10
+BULLET_SPEED = 10
+
+BUILDING_SPEED = 2
+ROAD_OFFSET = 0
+
+# Inicialização
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("OverDrive: Street Racer")
+clock = pygame.time.Clock()
+
+# Fontes
+font = pygame.font.SysFont(None, 48)
+
+# Entidades
+player = pygame.Rect((375, 500, 40, 70))
+hitbox = pygame.Rect(player.x + 5, player.y + 5, 30, 60)
+obstacles = []
+bullets = []
+score = 0
+
+def generate_buildings():
+    buildings_left = []
+    buildings_right = []
+    for i in range(0, SCREEN_HEIGHT, 100):
+        height = random.randint(80, 150)
+        rect_left = pygame.Rect(20, i, 100, height)
+        rect_right = pygame.Rect(680, i, 100, height)
+        color_left = random.choice([(255, 255, 100), (255, 200, 150)])
+        color_right = random.choice([(255, 255, 150), (200, 255, 200)])
+        buildings_left.append((rect_left, color_left))
+        buildings_right.append((rect_right, color_right))
+    return buildings_left, buildings_right
+
+left_buildings, right_buildings = generate_buildings()
+
+def update_buildings(buildings_list):
+    for i in range(len(buildings_list)):
+        rect, color = buildings_list[i]
+        rect.y += BUILDING_SPEED
+        if rect.top > SCREEN_HEIGHT:
+            height = random.randint(80, 150)
+            new_rect = pygame.Rect(rect.x, -height, rect.width, height)
+            new_color = random.choice([(255, 255, 100), (255, 200, 150), (255, 255, 150), (200, 255, 200)])
+            buildings_list[i] = (new_rect, new_color)
+
+def draw_racetrack():
+    screen.fill((10, 10, 25))
+    update_buildings(left_buildings)
+    update_buildings(right_buildings)
+
+    global ROAD_OFFSET
+    if random.random() < 0.01:
+        ROAD_OFFSET = random.choice([-1, 0, 1])
+    for i in range(len(left_buildings)):
+        left_buildings[i][0].x += ROAD_OFFSET
+        right_buildings[i][0].x += ROAD_OFFSET
+
+    for rect, color in left_buildings:
+        pygame.draw.rect(screen, (60, 60, 100), rect)
+        for x in range(rect.x + 10, rect.right - 10, 20):
+            for y in range(rect.y + 20, rect.bottom - 10, 25):
+                pygame.draw.rect(screen, color, (x, y, 10, 10))
+
+    for rect, color in right_buildings:
+        pygame.draw.rect(screen, (80, 80, 110), rect)
+        for x in range(rect.x + 10, rect.right - 10, 20):
+            for y in range(rect.y + 20, rect.bottom - 10, 25):
+                pygame.draw.rect(screen, color, (x, y, 10, 10))
+
+    pygame.draw.rect(screen, (30, 30, 30), (150, 0, 500, SCREEN_HEIGHT))
+    pygame.draw.rect(screen, (0, 255, 255), (150, 0, 5, SCREEN_HEIGHT))
+    pygame.draw.rect(screen, (255, 0, 255), (645, 0, 5, SCREEN_HEIGHT))
+    pygame.draw.rect(screen, (120, 120, 120), (155, 0, 5, SCREEN_HEIGHT))
+    pygame.draw.rect(screen, (120, 120, 120), (640, 0, 5, SCREEN_HEIGHT))
+
+    for y in range(0, SCREEN_HEIGHT, 40):
+        pygame.draw.rect(screen, (180, 180, 255), (395, y, 10, 20))
+
+    for x in range(160, 640, 120):
+        pygame.draw.rect(screen, (100, 100, 255), (x, 0, 5, 30))
+
+def draw_pause_text():
+    text = font.render("PAUSE - Pressione P para continuar", True, (255, 255, 255))
+    rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+    screen.blit(text, rect)
+    pygame.display.flip()
+
+def draw_explosion(x, y):
+    for _ in range(10):
+        radius = random.randint(5, 20)
+        color = random.choice([(255, 100, 0), (255, 200, 0), (255, 255, 255)])
+        offset_x = random.randint(-20, 20)
+        offset_y = random.randint(-20, 20)
+        pygame.draw.circle(screen, color, (x + offset_x, y + offset_y), radius)
+    pygame.display.update()
+    pygame.time.delay(500)
+
+# Loop principal
+run = True
+paused = False
+while run:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_p:
+                paused = not paused
+            if event.key == pygame.K_SPACE and not paused:
+                bullet = pygame.Rect(player.centerx - BULLET_WIDTH // 2, player.top - BULLET_HEIGHT, BULLET_WIDTH, BULLET_HEIGHT)
+                bullets.append(bullet)
+
+    if paused:
+        draw_pause_text()
+        clock.tick(10)
+        continue
+
+    draw_racetrack()
+
+    # Desenha carro do jogador
+    pygame.draw.rect(screen, (0, 200, 0), player)  # Verde escuro
+    pygame.draw.rect(screen, (0, 100, 0), (player.x + 10, player.y + 10, 20, 50))  # Corpo interno
+    pygame.draw.rect(screen, (0, 0, 255), hitbox, 2)
+
+    # Movimento
+    key = pygame.key.get_pressed()
+    dx = dy = 0
+    current_speed = BOOST_SPEED if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT] else SPEED
+
+    if key[pygame.K_a]: dx = -current_speed
+    if key[pygame.K_d]: dx = current_speed
+    if key[pygame.K_w]: dy = -current_speed
+    if key[pygame.K_s]: dy = current_speed
+
+    player.x += dx
+    player.y += dy
+    player.clamp_ip(pygame.Rect(150, 0, 500, SCREEN_HEIGHT))
+    hitbox.x, hitbox.y = player.x + 5, player.y + 5
+
+    # Obstáculos
+    SPAWN_TIMER += 1
+    if SPAWN_TIMER >= SPAWN_INTERVAL:
+        obstacle_x = random.randint(160, 640 - OBSTACLE_WIDTH)
+        obstacle = pygame.Rect(obstacle_x, -OBSTACLE_HEIGHT, OBSTACLE_WIDTH, OBSTACLE_HEIGHT)
+        obstacles.append(obstacle)
+        SPAWN_TIMER = 0
+
+    for obstacle in obstacles[:]:
+        obstacle.y += OBSTACLE_SPEED
+        pygame.draw.rect(screen, (200, 0, 0), obstacle)  # Carro inimigo
+        pygame.draw.rect(screen, (150, 0, 0), (obstacle.x + 5, obstacle.y + 10, 30, 50))  # Corpo interno
+        if obstacle.top > SCREEN_HEIGHT:
+            obstacles.remove(obstacle)
+
+    for bullet in bullets[:]:
+        bullet.y -= BULLET_SPEED
+        pygame.draw.rect(screen, (255, 255, 0), bullet)
+        if bullet.bottom < 0:
+            bullets.remove(bullet)
+        else:
+            for obstacle in obstacles[:]:
+                if bullet.colliderect(obstacle):
+                    obstacles.remove(obstacle)
+                    if bullet in bullets:
+                        bullets.remove(bullet)
+                    break
+
+    if not (key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]):
+        for obstacle in obstacles:
+            if hitbox.colliderect(obstacle):
+                draw_explosion(player.centerx, player.centery)
+                run = False
+
+    # Pontuação
+    score += 1
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+    screen.blit(score_text, (10, 10))
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
