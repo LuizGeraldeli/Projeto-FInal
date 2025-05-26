@@ -8,8 +8,8 @@ NADA = 0
 dificuldadedojogo = 0
 
 #Prepara as musicas do jogo
-musicamenu = pygame.mixer.Sound("OverDriftexe\Downloads\Audio - Songs\Menu (Gator Gambol - Omori).mp3")
-musicajogo = pygame.mixer.Sound("OverDriftexe\Downloads\Audio - Songs\Game (Knock you down!!! - Toby Fox).mp3")
+musicamenu = pygame.mixer.Sound("Downloads\Audio - Songs\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads\Audio - Songs\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
 
 #Define modos do jogo. Define a derivada segundos (tempo)
 menuactive = True
@@ -26,30 +26,30 @@ clock.tick(60)
 print(clock.get_time())
 
 #Definindo sprites do menu
-botao_menu_jogo = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_Jogar.png")
+botao_menu_jogo = pygame.image.load("Downloads\Images - Menu\Botao_Jogar.png")
 botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200,80))
-botao_menu_tutorial = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_Tutorial.png")
+botao_menu_tutorial = pygame.image.load("Downloads\Images - Menu\Botao_Tutorial.png")
 botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200,80))
-botao_dificuldade_easy = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_easy_dificuldade.png")
+botao_dificuldade_easy = pygame.image.load("Downloads\Images - Menu\Botao_easy_dificuldade.png")
 botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (128,128))
-botao_dificuldade_hard = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_hard_dificuldade.png")
+botao_dificuldade_hard = pygame.image.load("Downloads\Images - Menu\Botao_hard_dificuldade.png")
 botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (128,128))
-mago_eastergg = pygame.image.load("OverDriftexe\Downloads\Images - Sprites\The Mage (IDK).png")
+mago_eastergg = pygame.image.load("Downloads\Images - Sprites\The Mage (IDK).png")
 mago_eastergg = pygame.transform.scale(mago_eastergg, (128, 128))
 
 #Definido tamanho medio dos planos de fundo, os planos de fundo, e escalando eles
 backgroundsize = (1024,512)
-menu = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Overdrift_Menu.png")
+menu = pygame.image.load("Downloads\Images - Menu\Overdrift_Menu.png")
 menu = pygame.transform.scale(menu, backgroundsize)
-mapa = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Overdriftmap_V0.png")
+mapa = pygame.image.load("Downloads\Images - Menu\Overdriftmap_V0.png")
 mapa = pygame.transform.scale(mapa, backgroundsize)
-dificuldade = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Overdrift_dificulty_Correct.png")
+dificuldade = pygame.image.load("Downloads\Images - Menu\Overdrift_dificulty_Correct.png")
 dificuldade = pygame.transform.scale(dificuldade, backgroundsize)
-tutorial = pygame.image.load("OverDriftexe\Downloads\Images - Menus\menu_question.png")
+tutorial = pygame.image.load("Downloads\Images - Menu\Botao_Tutorial.png")
 tutorial = pygame.transform.scale(tutorial, backgroundsize)
 
 #Adicionando sprites menores(Tem que escalar eles individualmente)
-carro_mc = pygame.image.load("OverDriftexe\Downloads\Images - Sprites\Carro_MC_V1.png")
+carro_mc = pygame.image.load("Downloads\Images - Sprites\Carro_MC_V1.png")
 
 #Definindo tamanho do display 
 #O "",pygame.RESIZABLE" permite mudar o tamanho da tela (Nao adicionado)
@@ -110,6 +110,7 @@ while running:
             display_surface.blit(mago_eastergg, (1024-128, 512-128))
             pygame.display.set_caption('Mago da internet! Parabéns em achar um easter egg!')
 
+    #Se modo jogo, inicia loop do jogo
     if gameactive == True:
         display_surface.blit(mapa, (0,0))
 
