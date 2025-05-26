@@ -160,7 +160,7 @@ while running:
                     gameactive = True
                     dificuldadeactive = False
                     musicajatocando = False
-                    dificuldadedojogo = 1
+                    dificuldadedojogo = 1 
         elif event.type == pygame.MOUSEBUTTONUP:
             NADA = 0
     #Atualiza a tela
