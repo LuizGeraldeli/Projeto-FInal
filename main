@@ -1,1 +1,171 @@
-nada = 0
+#Instala e inicia o pygame
+import pygame
+pygame.init()  
+pygame.mixer.init()
+
+#Variaveis importantes
+NADA = 0
+dificuldadedojogo = 0
+
+#Prepara as musicas do jogo
+musicamenu = pygame.mixer.Sound("OverDriftexe\Downloads\Audio - Songs\Menu (Gator Gambol - Omori).mp3")
+musicajogo = pygame.mixer.Sound("OverDriftexe\Downloads\Audio - Songs\Game (Knock you down!!! - Toby Fox).mp3")
+
+#Define modos do jogo. Define a derivada segundos (tempo)
+menuactive = True
+tutorialactive = False
+dificuldadeactive = False
+gameactive = False
+second = 0
+
+#Cria um objeto "clock. Ai separa o jogo a rodar a 60 FPS
+clock = pygame.time.Clock()
+clock.tick(60)
+
+#Printa o tempo entre 2 frames em ms
+print(clock.get_time())
+
+#Definindo sprites do menu
+botao_menu_jogo = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_Jogar.png")
+botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200,80))
+botao_menu_tutorial = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_Tutorial.png")
+botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200,80))
+botao_dificuldade_easy = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_easy_dificuldade.png")
+botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (128,128))
+botao_dificuldade_hard = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Botao_hard_dificuldade.png")
+botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (128,128))
+mago_eastergg = pygame.image.load("OverDriftexe\Downloads\Images - Sprites\The Mage (IDK).png")
+mago_eastergg = pygame.transform.scale(mago_eastergg, (128, 128))
+
+#Definido tamanho medio dos planos de fundo, os planos de fundo, e escalando eles
+backgroundsize = (1024,512)
+menu = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Overdrift_Menu.png")
+menu = pygame.transform.scale(menu, backgroundsize)
+mapa = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Overdriftmap_V0.png")
+mapa = pygame.transform.scale(mapa, backgroundsize)
+dificuldade = pygame.image.load("OverDriftexe\Downloads\Images - Menus\Overdrift_dificulty_Correct.png")
+dificuldade = pygame.transform.scale(dificuldade, backgroundsize)
+tutorial = pygame.image.load("OverDriftexe\Downloads\Images - Menus\menu_question.png")
+tutorial = pygame.transform.scale(tutorial, backgroundsize)
+
+#Adicionando sprites menores(Tem que escalar eles individualmente)
+carro_mc = pygame.image.load("OverDriftexe\Downloads\Images - Sprites\Carro_MC_V1.png")
+
+#Definindo tamanho do display 
+#O "",pygame.RESIZABLE" permite mudar o tamanho da tela (Nao adicionado)
+largura_tela = 1024
+altura_tela = 512
+display_surface = pygame.display.set_mode((largura_tela, altura_tela))
+
+#Escolhe a imagem do carro e define como icone do jogo
+pygame.display.set_icon(carro_mc)
+
+#Titulo da janela que vai abrir
+pygame.display.set_caption('OverDrift.exe')
+
+#Cria um valor que checa se o jogo esta rodando
+#Isso permite criar o loop do jogo
+running = True
+musicajatocando = False
+
+#Mantem o jogo rodando enquanto "running" = True
+while running:
+    #Define tempo em segundos e ms
+    ms = clock.tick(60)
+    second += ms/1000
+    
+    tecla = pygame.key.get_pressed()
+    if gameactive == False and musicajatocando == False:
+        pygame.mixer.music.set_volume(0.0001)
+        musicamenu.play(-1)
+        musicajatocando = True
+    elif gameactive == True and musicajatocando == False:
+        pygame.mixer.stop()
+        musicajogo.play(-1)
+        musicajatocando = True
+
+    if second >= 30 and second <= 30.05 and gameactive == False:
+            pygame.display.set_caption('Estou te observando!')
+
+    #Se modo menu, abre o menu do jogo (Blit adiciona imagens)
+    if menuactive == True:
+        hitboxbotaomenujogo = botao_menu_jogo.get_rect(topleft=(250, 300))
+        hitboxbotaomenututorial = botao_menu_tutorial.get_rect(topleft=(575, 300))
+        display_surface.blit(menu, (0, 0))
+        display_surface.blit(botao_menu_jogo, (250, 300))
+        display_surface.blit(botao_menu_tutorial, (575, 300))
+
+    #Se modo tutorial, abre tela tutorial
+    if tutorialactive == True:
+        display_surface.blit(tutorial, (0,0))
+
+    #Se modo dificuldade, abre tela dificuldade
+    if dificuldadeactive == True:
+        hitboxbotaodificuldadeeasy = botao_dificuldade_easy.get_rect(topleft=(320, 300))
+        hitboxbotaodificuldadehard = botao_dificuldade_hard.get_rect(topleft=(640, 300))
+        display_surface.blit(dificuldade, (0,0))
+        display_surface.blit(botao_dificuldade_easy, (320, 300))
+        display_surface.blit(botao_dificuldade_hard, (640, 300))
+        if tecla[pygame.K_m] and tecla[pygame.K_a] and tecla[pygame.K_g]:
+            display_surface.blit(mago_eastergg, (1024-128, 512-128))
+            pygame.display.set_caption('Mago da internet! Parabéns em achar um easter egg!')
+
+    if gameactive == True:
+        display_surface.blit(mapa, (0,0))
+        
+
+    if gameactive == True:
+        NADA = 0
+
+    #Nos da a posicao (X,Y) do mouse. Importante para botoes
+    mouse = pygame.mouse.get_pos()
+
+    #Verifica se teve um evento (Ação)
+    for event in pygame.event.get():
+
+        #Se o evento foi fechar a janela o jogo fecha
+        if event.type == pygame.QUIT:
+            running = False
+
+        #Se o evento for click de tecla
+        if event.type == pygame.KEYDOWN:
+            if tutorialactive == True:
+                menuactive = True
+                tutorialactive = False
+            if dificuldadeactive == True:
+                if event.key == pygame.K_ESCAPE:
+                    menuactive = True
+                    dificuldadeactive = False
+            if event.key == pygame.K_w:
+                print("Vc apertou o w")
+
+        #Se o evento foi clickar com o mouse
+        elif event.type == pygame.MOUSEBUTTONDOWN:   
+            if hitboxbotaomenujogo.collidepoint(event.pos) and menuactive == True:  
+                print("Botão clicado! Abre menu jogo")
+                menuactive = False
+                dificuldadeactive = True
+            elif hitboxbotaomenututorial.collidepoint(event.pos) and menuactive == True:  
+                print("Botão clicado! Abre menu tutorial")
+                menuactive = False
+                tutorialactive = True
+            elif dificuldadeactive == True:
+                if hitboxbotaodificuldadeeasy.collidepoint(event.pos):  
+                    print("Botão clicado! Abre jogo easy")
+                    gameactive = True
+                    dificuldadeactive = False
+                    musicajatocando = False
+                    dificuldadedojogo = 0
+                if hitboxbotaodificuldadehard.collidepoint(event.pos):  
+                    print("Botão clicado! Abre jogo hard")
+                    gameactive = True
+                    dificuldadeactive = False
+                    musicajatocando = False
+                    dificuldadedojogo = 1
+        elif event.type == pygame.MOUSEBUTTONUP:
+            NADA = 0
+    #Atualiza a tela
+    pygame.display.update()
+
+#Força o pygame a fechar no final do processo se teve bug
+pygame.quit()
