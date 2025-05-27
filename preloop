@@ -19,7 +19,7 @@ menuactive = True
 tutorialactive = False
 dificuldadeactive = False
 gameactive = False
-paused = False  # Controla estado de pausa no jogo
+paused = False  # Controla pausa no jogo
 
 # Variáveis para tempo, pontuação e fonte de texto
 second = 0
@@ -63,15 +63,15 @@ tutorial = pygame.image.load("Downloads2\Images-Menus\menu_question.png")
 tutorial = pygame.transform.scale(tutorial, backgroundsize)
 
 # Carrega sprites dos veículos e explosão, redimensionando conforme necessário
-carro_mc = pygame.image.load("Downloads2\Images-Sprites\Carro_MC_V1.png")
-carro_mc = pygame.transform.scale(carro_mc, (64, 64))
+carro_mc = pygame.image.load("Downloads2\Images-Sprites\Carro_MC_V2.png")
+carro_mc = pygame.transform.scale(carro_mc, (36, 54))
 
 carro_obstaculo_ciano = pygame.image.load("Downloads2\Images-Sprites\Carro_Obstaculo_(Ciano).png")
-carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (64, 64))
+carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (28, 46))
 carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)  # Espelha verticalmente
 
-onibus_obstaculo = pygame.image.load("Downloads2\Images-Sprites\Onibus_Obstaculo_V0.png")
-onibus_obstaculo = pygame.transform.scale(onibus_obstaculo, (64, 128))
+onibus_obstaculo_azul = pygame.image.load("Downloads2\Images-Sprites\Onibus_Obstaculo(Azul).png")
+onibus_obstaculo_azul = pygame.transform.scale(onibus_obstaculo_azul, (44, 108))
 
 explosao = pygame.image.load("Downloads2\Images-Sprites\Explosão_derrota.png")
 explosao = pygame.transform.scale(explosao, (128, 128))
@@ -101,7 +101,7 @@ def resetar_jogo():
         if tipo == "carro":
             obstaculo = carro_obstaculo_ciano.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -64)))
         else:
-            obstaculo = onibus_obstaculo.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -128)))
+            obstaculo = onibus_obstaculo_azul.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -128)))
         obstaculos.append((tipo, obstaculo))
     musicajatocando = False
 
@@ -178,7 +178,7 @@ while running:
             if tipo == "carro":
                 display_surface.blit(carro_obstaculo_ciano, obstaculo.topleft)
             else:
-                display_surface.blit(onibus_obstaculo, obstaculo.topleft)
+                display_surface.blit(onibus_obstaculo_azul, obstaculo.topleft)
             # Verifica colisão entre jogador e obstáculo
             if carro_rect.colliderect(obstaculo):
                 display_surface.blit(explosao, carro_rect.topleft)  # Mostra explosão
