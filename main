@@ -59,7 +59,7 @@ menuactive = True
 tutorialactive = False
 dificuldadeactive = False
 gameactive = False
-paused = False
+paused = False 
 
 musicajatocando = False
 dificuldadedojogo = 0
