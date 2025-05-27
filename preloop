@@ -5,10 +5,15 @@ import random
 pygame.init()
 pygame.mixer.init()
 
+pygame.key.set_repeat(0)
+
 # Constantes e variáveis principais do jogo
 NADA = 1
 dificuldadedojogo = 1
 maxscore = 0
+dash = 1.0
+permissao_dash = True
+invincibilidade = False
 
 # Carrega músicas do menu e do jogo
 musicamenu = pygame.mixer.Sound("Downloads2\Audio-Musicas\OMORI OST - 103 Gator Gambol.mp3")
@@ -22,6 +27,7 @@ gameactive = False
 paused = False  # Controla pausa no jogo
 
 # Variáveis para tempo, pontuação e fonte de texto
+ms_total = 0
 second = 0
 score = 0
 score_timer = 0
@@ -76,6 +82,9 @@ onibus_obstaculo_azul = pygame.transform.scale(onibus_obstaculo_azul, (44, 108))
 explosao = pygame.image.load("Downloads2\Images-Sprites\Explosão_derrota.png")
 explosao = pygame.transform.scale(explosao, (128, 128))
 
+bolha_invincibilidade = pygame.image.load("Downloads2\Images-Sprites\Bolha_Invincibilidade.png")
+bolha_invincibilidade = pygame.transform.scale(bolha_invincibilidade, (50, 50))
+
 # Configura tela do jogo
 largura_tela = 1024
 altura_tela = 512
@@ -93,7 +102,7 @@ def resetar_jogo():
     score = 0
     score_timer = 0
     # Define posição inicial do carro do jogador
-    carro_rect = carro_mc.get_rect(center=(512, 400))
+    carro_rect = carro_mc.get_rect(center=(512, 400)) 
     obstaculos = []
     # Cria obstáculos (carros ou ônibus) em posições aleatórias fora da tela
     for _ in range(5 * dificuldadedojogo):
@@ -109,7 +118,12 @@ resetar_jogo()
 
 # Loop principal do jogo
 while running:
+    if invincibilidade:
+        carro_mc = carro_mc
+    else:
+        carro_mc = carro_mc
     ms = clock.tick(60)  # Tempo em ms desde último frame, para controle de velocidade
+    ms_total += ms
     tecla = pygame.key.get_pressed()  # Captura teclas pressionadas
 
     # Controla música dependendo do estado do jogo
@@ -161,7 +175,7 @@ while running:
 
         display_surface.blit(mapa, (0,0))  # Fundo do mapa
 
-        velocidade = 7
+        velocidade = 7 * dash
         # Movimenta carro do jogador conforme teclas WASD
         if tecla[pygame.K_w]: carro_rect.y -= velocidade
         if tecla[pygame.K_s]: carro_rect.y += velocidade
@@ -180,7 +194,7 @@ while running:
             else:
                 display_surface.blit(onibus_obstaculo_azul, obstaculo.topleft)
             # Verifica colisão entre jogador e obstáculo
-            if carro_rect.colliderect(obstaculo):
+            if carro_rect.colliderect(obstaculo) and not invincibilidade:
                 display_surface.blit(explosao, carro_rect.topleft)  # Mostra explosão
                 pygame.display.update()
                 pygame.time.delay(1000)  # Pausa 1 segundo
@@ -192,6 +206,7 @@ while running:
             if obstaculo.top > altura_tela:
                 obstaculo.y = random.randint(-600, -64)
                 obstaculo.x = random.randint(0, largura_tela-64)
+
 
         # Exibe pontuação na tela
         texto_score = fonte.render(f"Score: {score}", True, (255, 255, 255))
@@ -219,7 +234,13 @@ while running:
             # Alterna pausa ao pressionar P ou ESC no jogo
             if gameactive and event.key in [pygame.K_p, pygame.K_ESCAPE]:
                 paused = not paused
-
+        if event.type == pygame.KEYUP:
+            #Durante o jogo se aperta shift o carro fica mais rapido
+            if gameactive and permissao_dash and event.key == pygame.K_RSHIFT:
+                permissao_dash = False
+                dash = 3
+                tempo_ultimo_dash = ms_total
+                invincibilidade = True 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             # Clique em botões do menu, tutorial e dificuldade
             if menuactive:
@@ -241,6 +262,14 @@ while running:
                     dificuldadedojogo = 2
                     resetar_jogo()
 
+    if dash >= 1.1 and ms_total - tempo_ultimo_dash >= 300:
+        dash = 1
+        invincibilidade = False  # fim do dash
+    if not permissao_dash and ms_total - tempo_ultimo_dash >= 1000:
+        permissao_dash = True 
+
+
     pygame.display.update()  # Atualiza a tela
+    print(ms_total)
 
 pygame.quit()  # Encerra o pygame quando loop termina
