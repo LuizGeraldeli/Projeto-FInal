@@ -35,7 +35,7 @@ mago_eastergg = carregar_imagem_caminho("Downloads\\Images - Sprites\\The Mage (
 
 menu_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Overdrift_Menu.png", (LARGURA_TELA, ALTURA_TELA))
 mapa_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Overdriftmap_VF.png", (LARGURA_TELA, ALTURA_TELA))
-dificuldade_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Overdrift_dificulty_Correct.png", (LARGURA_TELA, ALTURA_TELA))
+dificuldade_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Overdrift_dificulty_VFinal-export.png", (LARGURA_TELA, ALTURA_TELA))
 tutorial_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Botao_Tutorial.png", (LARGURA_TELA, ALTURA_TELA))
 
 carro_img = carregar_imagem_caminho("Downloads\\Images - Sprites\\Carro_MC_V1.png", (64, 64))
