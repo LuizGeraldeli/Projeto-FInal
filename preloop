@@ -6,7 +6,7 @@ pygame.mixer.init()
 
 # Variaveis importantes
 NADA = 0
-dificuldadedojogo = 0
+dificuldadedojogo = 1
 
 # Prepara as musicas do jogo
 musicamenu = pygame.mixer.Sound("Downloads\Audio - Songs\OMORI OST - 103 Gator Gambol.mp3")
@@ -54,8 +54,9 @@ tutorial = pygame.transform.scale(tutorial, backgroundsize)
 # Sprites do jogo
 carro_mc = pygame.image.load("Downloads\Images - Sprites\Carro_MC_V1.png")
 carro_mc = pygame.transform.scale(carro_mc, (64, 64))
-carro_obstaculo1 = pygame.image.load("Downloads\Images - Sprites\Carro_Obstaculo_(Ciano).png")
-carro_obstaculo1 = pygame.transform.scale(carro_obstaculo1, (64, 64))
+carro_obstaculo_ciano = pygame.image.load("Downloads\Images - Sprites\Carro_Obstaculo_(Ciano).png")
+carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (64, 64))
+carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)
 onibus_obstaculo = pygame.image.load("Downloads\Images - Sprites\Onibus_Obstaculo_V0.png")
 onibus_obstaculo = pygame.transform.scale(onibus_obstaculo, (64, 128))
 explosao = pygame.image.load("Downloads\Images - Sprites\Explosão_derrota.png")
@@ -78,10 +79,10 @@ def resetar_jogo():
     score_timer = 0
     carro_rect = carro_mc.get_rect(center=(512, 400))
     obstaculos = []
-    for _ in range(5):
+    for _ in range(15):
         tipo = random.choice(["carro", "onibus"])
         if tipo == "carro":
-            obstaculo = carro_obstaculo1.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -64)))
+            obstaculo = carro_obstaculo_ciano.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -64)))
         else:
             obstaculo = onibus_obstaculo.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -128)))
         obstaculos.append((tipo, obstaculo))
@@ -125,13 +126,13 @@ while running:
     if gameactive and not paused:
         second += ms/1000
         score_timer += ms
-        if score_timer >= 1000:
-            score += 1
+        if score_timer >= 10:
+            score += 1 * dificuldadedojogo
             score_timer = 0
 
         display_surface.blit(mapa, (0,0))
 
-        velocidade = 5
+        velocidade = 7
         if tecla[pygame.K_w]: carro_rect.y -= velocidade
         if tecla[pygame.K_s]: carro_rect.y += velocidade
         if tecla[pygame.K_a]: carro_rect.x -= velocidade
@@ -143,7 +144,7 @@ while running:
         for tipo, obstaculo in obstaculos:
             obstaculo.y += 5
             if tipo == "carro":
-                display_surface.blit(carro_obstaculo1, obstaculo.topleft)
+                display_surface.blit(carro_obstaculo_ciano, obstaculo.topleft)
             else:
                 display_surface.blit(onibus_obstaculo, obstaculo.topleft)
             if carro_rect.colliderect(obstaculo):
@@ -163,8 +164,8 @@ while running:
         display_surface.blit(texto_score, (10, 10))
 
     elif paused and gameactive:
-        texto_pause = fonte.render("PAUSADO - Aperte P para voltar", True, (255, 255, 0))
-        display_surface.blit(texto_pause, (300, 250))
+        texto_pause = fonte.render("PAUSADO - Aperte P ou ESC para voltar", True, (255, 255, 255))
+        display_surface.blit(texto_pause, (260, 250))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -179,6 +180,8 @@ while running:
                 dificuldadeactive = False
             if gameactive and event.key == pygame.K_p:
                 paused = not paused  # Alterna entre pausado e ativo
+            if gameactive and event.key == pygame.K_ESCAPE:
+                paused = not paused  # Alterna entre pausado e ativo
 
         elif event.type == pygame.MOUSEBUTTONDOWN:   
             if hitboxbotaomenujogo.collidepoint(event.pos) and menuactive:  
@@ -191,10 +194,12 @@ while running:
                 if hitboxbotaodificuldadeeasy.collidepoint(event.pos):  
                     gameactive = True
                     dificuldadeactive = False
+                    dificuldadedojogo = 1
                     resetar_jogo()
                 if hitboxbotaodificuldadehard.collidepoint(event.pos):  
                     gameactive = True
                     dificuldadeactive = False
+                    dificuldadedojogo = 2
                     resetar_jogo()
 
     pygame.display.update()
