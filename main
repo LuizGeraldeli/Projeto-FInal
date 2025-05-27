@@ -111,6 +111,38 @@ boost_ativo = False
 
 # --- Funções ---
 
+def reposicionar_obstaculo_sem_colisao(tipo, obstaculos_atuais, xp_rect):
+    if tipo == "carro" or tipo == "cone":
+        w, h = 64, 64
+        y_min, y_max = -600, -64
+    elif tipo == "onibus":
+        w, h = 64, 128
+        y_min, y_max = -600, -128
+    else:
+        w, h = 64, 64
+        y_min, y_max = -600, -64
+
+    tentativas = 0
+    while True:
+        x = random.randint(0, LARGURA_TELA - w)
+        y = random.randint(y_min, y_max)
+        novo_rect = pygame.Rect(x, y, w, h)
+
+        colisao = False
+        for _, r in obstaculos_atuais:
+            if novo_rect.colliderect(r):
+                colisao = True
+                break
+        if xp_rect and novo_rect.colliderect(xp_rect):
+            colisao = True
+
+        if not colisao:
+            return novo_rect
+
+        tentativas += 1
+        if tentativas > 100:
+            return novo_rect
+
 def resetar_jogo():
     global carro_rect, obstaculos, score, score_timer, boost_cooldown, boost_duration, boost_ativo
     global xp_moeda_rect, xp_tempo_ultimo_spawn
@@ -136,28 +168,21 @@ def resetar_jogo():
             tipo = random.choice(["carro", "onibus", "cone"])
         else:
             tipo = random.choice(["carro", "onibus"])
-
+        
         if tipo == "carro":
             w, h = 64, 64
         elif tipo == "onibus":
             w, h = 64, 128
         else:
             w, h = 64, 64
-
+        
         tentativas = 0
         while True:
             x = random.randint(0, LARGURA_TELA - w)
-            y = random.randint(-600, -64 if tipo in ["carro", "cone"] else -128)
+            y = random.randint(-600, -64 if tipo == "carro" or tipo == "cone" else -128)
             novo_rect = pygame.Rect(x, y, w, h)
 
-            # Verifica colisão com todos obstáculos já gerados na lista temporária
-            colisao = False
-            for _, r in obstaculos_temp:
-                if novo_rect.colliderect(r):
-                    colisao = True
-                    break
-
-            # Também verifica colisão com moeda XP (se existir)
+            colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos_temp)
             if xp_moeda_rect and novo_rect.colliderect(xp_moeda_rect):
                 colisao = True
 
@@ -167,7 +192,6 @@ def resetar_jogo():
 
             tentativas += 1
             if tentativas > 100:
-                # Caso não ache posição após 100 tentativas, força a inclusão para evitar loop infinito
                 obstaculos_temp.append((tipo, novo_rect))
                 break
 
@@ -246,9 +270,8 @@ def atualizar_obstaculos():
                 break
 
         if rect.top > ALTURA_TELA:
-            rect.x = random.randint(0, LARGURA_TELA - rect.width)
-            rect.y = random.randint(-600, -64 if tipo == "carro" else -128 if tipo == "onibus" else -64)
-            obstaculos[i] = (tipo, rect)
+            novo_rect = reposicionar_obstaculo_sem_colisao(tipo, obstaculos, xp_moeda_rect)
+            obstaculos[i] = (tipo, novo_rect)
 
 def desenhar_boost():
     if boost_ativo:
