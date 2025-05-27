@@ -79,7 +79,7 @@ def resetar_jogo():
     score_timer = 0
     carro_rect = carro_mc.get_rect(center=(512, 400))
     obstaculos = []
-    for _ in range(15):
+    for _ in range(5 * dificuldadedojogo):
         tipo = random.choice(["carro", "onibus"])
         if tipo == "carro":
             obstaculo = carro_obstaculo_ciano.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -64)))
