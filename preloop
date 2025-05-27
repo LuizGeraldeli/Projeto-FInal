@@ -1,4 +1,3 @@
-# Importa bibliotecas essenciais do pygame e random
 import pygame
 import random
 
@@ -7,13 +6,13 @@ pygame.init()
 pygame.mixer.init()
 
 # Constantes e variáveis principais do jogo
-NADA = 0
+NADA = 1
 dificuldadedojogo = 1
 maxscore = 0
 
 # Carrega músicas do menu e do jogo
-musicamenu = pygame.mixer.Sound("Downloads\Audio - Songs\OMORI OST - 103 Gator Gambol.mp3")
-musicajogo = pygame.mixer.Sound("Downloads\Audio - Songs\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
+musicamenu = pygame.mixer.Sound("Downloads2\Audio-Musicas\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads2\Audio-Musicas\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
 
 # Flags para controlar estados das telas e pausa
 menuactive = True
@@ -33,48 +32,48 @@ clock = pygame.time.Clock()
 clock.tick(60)
 
 # Carrega e redimensiona imagens dos botões do menu
-botao_menu_jogo = pygame.image.load("Downloads\Images - Menu\Botao_Jogar.png")
+botao_menu_jogo = pygame.image.load("Downloads2\Images-Menus\Botao_Jogar.png")
 botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200,80))
 
-botao_menu_tutorial = pygame.image.load("Downloads\Images - Menu\Botao_Tutorial.png")
+botao_menu_tutorial = pygame.image.load("Downloads2\Images-Menus\Botao_Tutorial.png")
 botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200,80))
 
-botao_dificuldade_easy = pygame.image.load("Downloads\Images - Menu\Botao_Dificuldade_EasyV1.png")
+botao_dificuldade_easy = pygame.image.load("Downloads2\Images-Menus\Botao_Dificuldade_EasyV1.png")
 botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (256,256))
 
-botao_dificuldade_hard = pygame.image.load("Downloads\Images - Menu\Botao_Dificuldade_HardV1.png")
+botao_dificuldade_hard = pygame.image.load("Downloads2\Images-Menus\Botao_Dificuldade_HardV1.png")
 botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (256,256))
 
 # Easter egg: imagem do mago
-mago_eastergg = pygame.image.load("Downloads\Images - Sprites\The Mage (IDK).png")
+mago_eastergg = pygame.image.load("Downloads2\Images-Sprites\The Mage (IDK).png")
 mago_eastergg = pygame.transform.scale(mago_eastergg, (128, 128))
 
 # Carrega e ajusta imagens de planos de fundo
 backgroundsize = (1024,512)
-menu = pygame.image.load("Downloads\Images - Menu\Overdrift_Menu.png")
+menu = pygame.image.load("Downloads2\Images-Menus\Overdrift_Menu.png")
 menu = pygame.transform.scale(menu, backgroundsize)
 
-mapa = pygame.image.load("Downloads\Images - Menu\Overdriftmap_VF.png")
+mapa = pygame.image.load("Downloads2\Images-Menus\Overdriftmap_VF.png")
 mapa = pygame.transform.scale(mapa, backgroundsize)
 
-dificuldade = pygame.image.load("Downloads\Images - Menu\Overdrift_dificulty_VFinal-export.png")
+dificuldade = pygame.image.load("Downloads2\Images-Menus\Overdrift_dificulty_V0.png")
 dificuldade = pygame.transform.scale(dificuldade, backgroundsize)
 
-tutorial = pygame.image.load("Downloads\Images - Menu\menu_question.png")
+tutorial = pygame.image.load("Downloads2\Images-Menus\menu_question.png")
 tutorial = pygame.transform.scale(tutorial, backgroundsize)
 
 # Carrega sprites dos veículos e explosão, redimensionando conforme necessário
-carro_mc = pygame.image.load("Downloads\Images - Sprites\Carro_MC_V1.png")
+carro_mc = pygame.image.load("Downloads2\Images-Sprites\Carro_MC_V1.png")
 carro_mc = pygame.transform.scale(carro_mc, (64, 64))
 
-carro_obstaculo_ciano = pygame.image.load("Downloads\Images - Sprites\Carro_Obstaculo_(Ciano).png")
+carro_obstaculo_ciano = pygame.image.load("Downloads2\Images-Sprites\Carro_Obstaculo_(Ciano).png")
 carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (64, 64))
 carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)  # Espelha verticalmente
 
-onibus_obstaculo = pygame.image.load("Downloads\Images - Sprites\Onibus_Obstaculo_V0.png")
+onibus_obstaculo = pygame.image.load("Downloads2\Images-Sprites\Onibus_Obstaculo_V0.png")
 onibus_obstaculo = pygame.transform.scale(onibus_obstaculo, (64, 128))
 
-explosao = pygame.image.load("Downloads\Images - Sprites\Explosão_derrota.png")
+explosao = pygame.image.load("Downloads2\Images-Sprites\Explosão_derrota.png")
 explosao = pygame.transform.scale(explosao, (128, 128))
 
 # Configura tela do jogo
