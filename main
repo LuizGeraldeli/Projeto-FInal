@@ -17,15 +17,28 @@ BOOST_VELOCIDADE_BONUS = 5
 BOOST_INTERVALO_MS = 10000   # 10 segundos para liberar boost
 BOOST_DURACAO_MS = 5000      # boost dura 5 segundos
 
-# --- Carregamento de recursos ---
-# Música
-musicamenu = pygame.mixer.Sound("Downloads\\Audio - Songs\\OMORI OST - 103 Gator Gambol.mp3")
-musicajogo = pygame.mixer.Sound("Downloads\\Audio - Songs\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
+# --- Funções para carregar imagens mantendo proporção ---
 
-# Imagens
+def carregar_imagem_proporcional_largura(caminho, largura_max):
+    img = pygame.image.load(caminho)
+    proporcao = img.get_height() / img.get_width()
+    nova_altura = int(largura_max * proporcao)
+    return pygame.transform.scale(img, (largura_max, nova_altura))
+
+def carregar_imagem_proporcional_altura(caminho, altura_max):
+    img = pygame.image.load(caminho)
+    proporcao = img.get_width() / img.get_height()
+    nova_largura = int(altura_max * proporcao)
+    return pygame.transform.scale(img, (nova_largura, altura_max))
+
 def carregar_imagem_caminho(caminho, tamanho=None):
     img = pygame.image.load(caminho)
     return pygame.transform.scale(img, tamanho) if tamanho else img
+
+# --- Carregamento de recursos ---
+
+musicamenu = pygame.mixer.Sound("Downloads\\Audio - Songs\\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads\\Audio - Songs\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
 
 botao_menu_jogo = carregar_imagem_caminho("Downloads\\Images - Menu\\Botao_Jogar.png", (200, 80))
 botao_menu_tutorial = carregar_imagem_caminho("Downloads\\Images - Menu\\Botao_Tutorial.png", (200, 80))
@@ -38,15 +51,15 @@ mapa_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Overdriftmap_VF.png
 dificuldade_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Overdrift_dificulty_VFinal-export.png", (LARGURA_TELA, ALTURA_TELA))
 tutorial_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Botao_Tutorial.png", (LARGURA_TELA, ALTURA_TELA))
 
-carro_img = carregar_imagem_caminho("Downloads\\Images - Sprites\\Carro_MC_V1.png", (64, 64))
-bolha_invincibilidade = carregar_imagem_caminho("Downloads\\Images - Sprites\\Bolha_Invincibilidade.png", (80, 80))
+carro_img = carregar_imagem_proporcional_largura("Downloads\\Images - Sprites\\Carro_MC_V1.png", 64)
+bolha_invincibilidade = carregar_imagem_proporcional_largura("Downloads\\Images - Sprites\\Bolha_Invincibilidade.png", 80)
+xp_moeda_img = carregar_imagem_proporcional_largura("Downloads\\Images - Sprites\\EXP_Token.png", 48)
+cone_obstaculo = carregar_imagem_proporcional_largura("Downloads\\Images - Sprites\\Obstaculo_2.png", 64)
 
-# Nova imagem: moeda XP
-xp_moeda_img = carregar_imagem_caminho("Downloads\\Images - Sprites\\EXP_Token.png", (48, 48))
-
-# Nova imagem: cone obstáculo
-cone_obstaculo = pygame.image.load("Downloads\\Images - Sprites\\Obstaculo_2.png")
-cone_obstaculo = pygame.transform.scale(cone_obstaculo, (64, 64))
+carro_obstaculo_ciano = carregar_imagem_proporcional_largura("Downloads\\Images - Sprites\\Carro_Obstaculo_(Ciano).png", 64)
+carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)
+onibus_obstaculo = carregar_imagem_proporcional_altura("Downloads\\Images - Sprites\\Onibus_Obstaculo_V0.png", 128)
+explosao = carregar_imagem_proporcional_largura("Downloads\\Images - Sprites\\Explosao_derrota.png", 128)
 
 # Fonte para textos
 fonte = pygame.font.SysFont(None, 36)
@@ -75,7 +88,6 @@ xp_moeda_rect = None
 xp_tempo_ultimo_spawn = 0
 XP_SPAWN_INTERVAL_MS = 5000  # 5 segundos
 
-# Velocidade do carro e controle da desaceleração
 velocidade_base = 7
 velocidade_atual = velocidade_base
 desacelerado = False
@@ -124,23 +136,28 @@ def resetar_jogo():
             tipo = random.choice(["carro", "onibus", "cone"])
         else:
             tipo = random.choice(["carro", "onibus"])
-        
-        # Define tamanho baseado no tipo
+
         if tipo == "carro":
             w, h = 64, 64
         elif tipo == "onibus":
             w, h = 64, 128
-        else:  # cone
+        else:
             w, h = 64, 64
-        
-        # Tenta encontrar posição válida sem colisão
+
         tentativas = 0
         while True:
             x = random.randint(0, LARGURA_TELA - w)
-            y = random.randint(-600, -64 if tipo == "carro" or tipo == "cone" else -128)
+            y = random.randint(-600, -64 if tipo in ["carro", "cone"] else -128)
             novo_rect = pygame.Rect(x, y, w, h)
 
-            colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos_temp)
+            # Verifica colisão com todos obstáculos já gerados na lista temporária
+            colisao = False
+            for _, r in obstaculos_temp:
+                if novo_rect.colliderect(r):
+                    colisao = True
+                    break
+
+            # Também verifica colisão com moeda XP (se existir)
             if xp_moeda_rect and novo_rect.colliderect(xp_moeda_rect):
                 colisao = True
 
@@ -150,6 +167,7 @@ def resetar_jogo():
 
             tentativas += 1
             if tentativas > 100:
+                # Caso não ache posição após 100 tentativas, força a inclusão para evitar loop infinito
                 obstaculos_temp.append((tipo, novo_rect))
                 break
 
@@ -157,12 +175,12 @@ def resetar_jogo():
 
 def tocar_musica():
     global musicajatocando
-    if gameactive:  # Música da fase
+    if gameactive:
         if musicajatocando != 'game':
             pygame.mixer.stop()
             musicajogo.play(-1)
             musicajatocando = 'game'
-    else:  # Música do menu
+    else:
         if musicajatocando != 'menu':
             pygame.mixer.stop()
             musicamenu.play(-1)
@@ -221,8 +239,8 @@ def atualizar_obstaculos():
                 global gameactive, menuactive, musicajatocando, tutorialactive, dificuldadeactive
                 gameactive = False
                 menuactive = True
-                tutorialactive = False    # força desativar tutorial
-                dificuldadeactive = False  # força desativar dificuldade
+                tutorialactive = False
+                dificuldadeactive = False
                 musicajatocando = False
                 resetar_jogo()
                 break
@@ -259,7 +277,7 @@ def spawn_xp_moeda():
         colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos)
         if novo_rect.colliderect(carro_rect):
             colisao = True
-        
+
         if not colisao:
             xp_moeda_rect = novo_rect
             break
@@ -268,20 +286,6 @@ def spawn_xp_moeda():
         if tentativas > 100:
             xp_moeda_rect = novo_rect
             break
-
-# Carregar sprites de obstáculos (sem escala para manter compatibilidade)
-carro_obstaculo_ciano = pygame.image.load("Downloads\\Images - Sprites\\Carro_Obstaculo_(Ciano).png")
-carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (64, 64))
-carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)
-
-onibus_obstaculo = pygame.image.load("Downloads\\Images - Sprites\\Onibus_Obstaculo_V0.png")
-onibus_obstaculo = pygame.transform.scale(onibus_obstaculo, (64, 128))
-
-explosao = pygame.image.load("Downloads\\Images - Sprites\\Explosao_derrota.png")  # arquivo sem acento
-explosao = pygame.transform.scale(explosao, (128, 128))
-
-# --- Reset inicial ---
-resetar_jogo()
 
 # --- Loop principal ---
 running = True
