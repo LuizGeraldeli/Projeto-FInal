@@ -138,7 +138,7 @@ def movimentar_carro(tecla, velocidade):
     carro_rect.clamp_ip(display_surface.get_rect())
 
 def atualizar_obstaculos():
-    global gameactive, musicajatocando
+    global gameactive, musicajatocando, menuactive
     velocidade_obstaculo = 5
     for i, (tipo, rect) in enumerate(obstaculos):
         rect.y += velocidade_obstaculo
@@ -152,8 +152,12 @@ def atualizar_obstaculos():
             display_surface.blit(explosao, carro_rect.topleft)
             pygame.display.update()
             pygame.time.delay(1000)
+
+            # Voltar para o menu inicial
             gameactive = False
+            menuactive = True
             musicajatocando = False
+
             resetar_jogo()
             break
         if rect.top > ALTURA_TELA:
