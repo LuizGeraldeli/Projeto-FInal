@@ -126,14 +126,16 @@ def resetar_jogo():
 
 def tocar_musica():
     global musicajatocando
-    if not gameactive and not musicajatocando:
-        pygame.mixer.music.set_volume(0.0001)
-        musicamenu.play(-1)
-        musicajatocando = True
-    elif gameactive and not musicajatocando:
-        pygame.mixer.stop()
-        musicajogo.play(-1)
-        musicajatocando = True
+    if gameactive: # Musica se estiver na fase
+            if musicajatocando != 'game':
+                pygame.mixer.stop()
+                musicajogo.play(-1)
+                musicajatocando = 'game'
+    else: # para todas as outras telas --> musica menu
+        if musicajatocando != 'menu':
+            pygame.mixer.stop()  # Para as músicas e sons em reprodução
+            musicamenu.play(-1)
+            musicajatocando = 'menu'
 
 def desenhar_menu():
     display_surface.blit(menu_bg, (0, 0))
