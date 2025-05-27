@@ -7,6 +7,7 @@ pygame.mixer.init()
 # Variaveis importantes
 NADA = 0
 dificuldadedojogo = 1
+maxscore = 0
 
 # Prepara as musicas do jogo
 musicamenu = pygame.mixer.Sound("Downloads\Audio - Songs\OMORI OST - 103 Gator Gambol.mp3")
@@ -74,7 +75,7 @@ musicajatocando = False
 
 # Reset do jogo
 def resetar_jogo():
-    global carro_rect, obstaculos, musicajatocando, score, score_timer
+    global carro_rect, obstaculos, musicajatocando, score, score_timer, maxscore
     score = 0
     score_timer = 0
     carro_rect = carro_mc.get_rect(center=(512, 400))
@@ -95,6 +96,7 @@ while running:
     tecla = pygame.key.get_pressed()
 
     if not gameactive and not musicajatocando:
+        pygame.mixer.stop()
         pygame.mixer.music.set_volume(0.0001)
         musicamenu.play(-1)
         musicajatocando = True
@@ -109,6 +111,8 @@ while running:
         display_surface.blit(menu, (0, 0))
         display_surface.blit(botao_menu_jogo, (250, 300))
         display_surface.blit(botao_menu_tutorial, (575, 300))
+        texto_maxscore = fonte.render(f"Max Score: {maxscore}", True, (255, 255, 255))
+        display_surface.blit(texto_maxscore, (10, 10))
 
     if tutorialactive:
         display_surface.blit(tutorial, (0,0))
@@ -126,9 +130,12 @@ while running:
     if gameactive and not paused:
         second += ms/1000
         score_timer += ms
+        maxscore = 0
         if score_timer >= 10:
             score += 1 * dificuldadedojogo
             score_timer = 0
+        if score >= maxscore:
+            maxscore = score
 
         display_surface.blit(mapa, (0,0))
 
