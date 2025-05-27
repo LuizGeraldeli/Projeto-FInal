@@ -101,13 +101,28 @@ def resetar_jogo():
     xp_tempo_ultimo_spawn = 0
     carro_rect.center = (LARGURA_TELA // 2, ALTURA_TELA - 100)
     obstaculos.clear()
-    for _ in range(5 * (dificuldadedojogo + 1)):
+
+    obstaculos_temp = []
+    quantidade = 5 * (dificuldadedojogo + 1)
+
+    for _ in range(quantidade):
         tipo = random.choice(["carro", "onibus"])
-        if tipo == "carro":
-            rect = pygame.Rect(random.randint(0, LARGURA_TELA - 64), random.randint(-600, -64), 64, 64)
-        else:
-            rect = pygame.Rect(random.randint(0, LARGURA_TELA - 64), random.randint(-600, -128), 64, 128)
-        obstaculos.append((tipo, rect))
+        w, h = (64, 64) if tipo == "carro" else (64, 128)
+        
+        while True:
+            x = random.randint(0, LARGURA_TELA - w)
+            y = random.randint(-600, -64 if tipo == "carro" else -128)
+            novo_rect = pygame.Rect(x, y, w, h)
+
+            colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos_temp)
+            if xp_moeda_rect and novo_rect.colliderect(xp_moeda_rect):
+                colisao = True
+
+            if not colisao:
+                obstaculos_temp.append((tipo, novo_rect))
+                break
+
+    obstaculos.extend(obstaculos_temp)
 
 def tocar_musica():
     global musicajatocando
@@ -158,12 +173,10 @@ def atualizar_obstaculos():
             display_surface.blit(onibus_obstaculo, rect.topleft)
         # Colisão somente se boost não ativo
         if not boost_ativo and carro_rect.colliderect(rect):
-            # Explosão e reset do jogo
             display_surface.blit(explosao, carro_rect.topleft)
             pygame.display.update()
             pygame.time.delay(1000)
 
-            # Voltar para o menu inicial
             gameactive = False
             menuactive = True
             musicajatocando = False
@@ -192,9 +205,25 @@ def desenhar_texto_boost():
 
 def spawn_xp_moeda():
     global xp_moeda_rect
-    x = random.randint(0, LARGURA_TELA - xp_moeda_img.get_width())
-    y = random.randint(0, ALTURA_TELA - xp_moeda_img.get_height())
-    xp_moeda_rect = xp_moeda_img.get_rect(topleft=(x, y))
+    w, h = xp_moeda_img.get_width(), xp_moeda_img.get_height()
+    tentativas = 0
+    while True:
+        x = random.randint(0, LARGURA_TELA - w)
+        y = random.randint(0, ALTURA_TELA - h)
+        novo_rect = pygame.Rect(x, y, w, h)
+
+        colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos)
+        if novo_rect.colliderect(carro_rect):
+            colisao = True
+        
+        if not colisao:
+            xp_moeda_rect = novo_rect
+            break
+
+        tentativas += 1
+        if tentativas > 100:
+            xp_moeda_rect = novo_rect
+            break
 
 # Carregar sprites de obstáculos (sem escala para manter compatibilidade)
 carro_obstaculo_ciano = pygame.image.load("Downloads\\Images - Sprites\\Carro_Obstaculo_(Ciano).png")
@@ -216,10 +245,8 @@ while running:
     ms = clock.tick(FPS)
     tecla = pygame.key.get_pressed()
 
-    # Atualiza música de fundo
     tocar_musica()
 
-    # Processa eventos
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -255,7 +282,6 @@ while running:
                     dificuldadedojogo = 1
                     resetar_jogo()
 
-    # Atualiza tela conforme estado
     if menuactive:
         desenhar_menu()
     elif tutorialactive:
@@ -265,7 +291,6 @@ while running:
     elif gameactive:
         display_surface.blit(mapa_bg, (0, 0))
 
-        # Atualiza boost
         if not boost_ativo:
             boost_cooldown += ms
             if boost_cooldown > BOOST_INTERVALO_MS:
@@ -277,46 +302,36 @@ while running:
                 boost_duration = 0
                 boost_cooldown = 0
 
-        # Move o carro com velocidade aumentada se boost ativo
         velocidade = 7 + (BOOST_VELOCIDADE_BONUS if boost_ativo else 0)
         movimentar_carro(tecla, velocidade)
 
-        # Ativa boost ao segurar Shift se disponível
         if boost_cooldown >= BOOST_INTERVALO_MS and (tecla[pygame.K_LSHIFT] or tecla[pygame.K_RSHIFT]):
             boost_ativo = True
             boost_duration = BOOST_DURACAO_MS
             boost_cooldown = 0
 
-        # Desenha elementos do jogo
         display_surface.blit(carro_img, carro_rect.topleft)
         desenhar_boost()
         atualizar_obstaculos()
 
-        # Atualiza pontuação
         score_timer += ms
         if score_timer >= 100:
             score += 1 * (dificuldadedojogo + 1)
             score_timer = 0
 
-        # Spawn moeda XP a cada 5 segundos
         xp_tempo_ultimo_spawn += ms
         if xp_moeda_rect is None and xp_tempo_ultimo_spawn >= XP_SPAWN_INTERVAL_MS:
             spawn_xp_moeda()
             xp_tempo_ultimo_spawn = 0
 
-        # Checa colisão do carro com moeda XP
         if xp_moeda_rect and carro_rect.colliderect(xp_moeda_rect):
-            score += 1000  # Adiciona 1000 ao score ao coletar a moeda
+            score += 1000
             xp_moeda_rect = None
 
-        # Desenha moeda XP se existir
         if xp_moeda_rect:
             display_surface.blit(xp_moeda_img, xp_moeda_rect.topleft)
 
-        # Desenha score
         desenhar_score()
-
-        # Texto de boost disponível
         desenhar_texto_boost()
 
     pygame.display.update()
