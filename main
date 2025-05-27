@@ -44,6 +44,10 @@ bolha_invincibilidade = carregar_imagem_caminho("Downloads\\Images - Sprites\\Bo
 # Nova imagem: moeda XP
 xp_moeda_img = carregar_imagem_caminho("Downloads\\Images - Sprites\\EXP_Token.png", (48, 48))
 
+# Nova imagem: cone obstáculo
+cone_obstaculo = pygame.image.load("Downloads\\Images - Sprites\\Obstaculo_2.png")
+cone_obstaculo = pygame.transform.scale(cone_obstaculo, (64, 64))
+
 # Fonte para textos
 fonte = pygame.font.SysFont(None, 36)
 
@@ -71,6 +75,12 @@ xp_moeda_rect = None
 xp_tempo_ultimo_spawn = 0
 XP_SPAWN_INTERVAL_MS = 5000  # 5 segundos
 
+# Velocidade do carro e controle da desaceleração
+velocidade_base = 7
+velocidade_atual = velocidade_base
+desacelerado = False
+desacelera_timer = 0
+
 # Posições dos botões (hitboxes)
 hitboxbotaomenujogo = botao_menu_jogo.get_rect(topleft=(250, 300))
 hitboxbotaomenututorial = botao_menu_tutorial.get_rect(topleft=(575, 300))
@@ -92,6 +102,7 @@ boost_ativo = False
 def resetar_jogo():
     global carro_rect, obstaculos, score, score_timer, boost_cooldown, boost_duration, boost_ativo
     global xp_moeda_rect, xp_tempo_ultimo_spawn
+    global velocidade_atual, desacelerado, desacelera_timer
     score = 0
     score_timer = 0
     boost_cooldown = 0
@@ -99,6 +110,9 @@ def resetar_jogo():
     boost_ativo = False
     xp_moeda_rect = None
     xp_tempo_ultimo_spawn = 0
+    velocidade_atual = velocidade_base
+    desacelerado = False
+    desacelera_timer = 0
     carro_rect.center = (LARGURA_TELA // 2, ALTURA_TELA - 100)
     obstaculos.clear()
 
@@ -106,12 +120,15 @@ def resetar_jogo():
     quantidade = 5 * (dificuldadedojogo + 1)
 
     for _ in range(quantidade):
-        tipo = random.choice(["carro", "onibus"])
-        w, h = (64, 64) if tipo == "carro" else (64, 128)
+        if dificuldadedojogo == 1:
+            tipo = random.choice(["carro", "onibus", "cone"])  # cone só no hard
+        else:
+            tipo = random.choice(["carro", "onibus"])  # só carro e onibus no easy
+        w, h = (64, 64) if tipo == "carro" else (64, 128) if tipo == "onibus" else (64, 64)
         
         while True:
             x = random.randint(0, LARGURA_TELA - w)
-            y = random.randint(-600, -64 if tipo == "carro" else -128)
+            y = random.randint(-600, -64 if tipo == "carro" else -128 if tipo == "onibus" else -64)
             novo_rect = pygame.Rect(x, y, w, h)
 
             colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos_temp)
@@ -126,14 +143,14 @@ def resetar_jogo():
 
 def tocar_musica():
     global musicajatocando
-    if gameactive: # Musica se estiver na fase
-            if musicajatocando != 'game':
-                pygame.mixer.stop()
-                musicajogo.play(-1)
-                musicajatocando = 'game'
-    else: # para todas as outras telas --> musica menu
+    if gameactive:  # Música da fase
+        if musicajatocando != 'game':
+            pygame.mixer.stop()
+            musicajogo.play(-1)
+            musicajatocando = 'game'
+    else:  # Música do menu
         if musicajatocando != 'menu':
-            pygame.mixer.stop()  # Para as músicas e sons em reprodução
+            pygame.mixer.stop()
             musicamenu.play(-1)
             musicajatocando = 'menu'
 
@@ -166,28 +183,39 @@ def movimentar_carro(tecla, velocidade):
 
 def atualizar_obstaculos():
     global gameactive, musicajatocando, menuactive
+    global desacelerado, desacelera_timer, velocidade_atual
     velocidade_obstaculo = 5
     for i, (tipo, rect) in enumerate(obstaculos):
         rect.y += velocidade_obstaculo
         if tipo == "carro":
             display_surface.blit(carro_obstaculo_ciano, rect.topleft)
-        else:
+        elif tipo == "onibus":
             display_surface.blit(onibus_obstaculo, rect.topleft)
-        # Colisão somente se boost não ativo
+        elif tipo == "cone":
+            display_surface.blit(cone_obstaculo, rect.topleft)
+
         if not boost_ativo and carro_rect.colliderect(rect):
-            display_surface.blit(explosao, carro_rect.topleft)
-            pygame.display.update()
-            pygame.time.delay(1000)
+            if tipo == "cone":
+                desacelerado = True
+                desacelera_timer = 3000  # 3 segundos
+                velocidade_atual = velocidade_base * 0.5
+                rect.y = ALTURA_TELA + 100  # Remove o cone da tela para evitar múltiplas colisões rápidas
+            else:
+                display_surface.blit(explosao, carro_rect.topleft)
+                pygame.display.update()
+                pygame.time.delay(1000)
+                global gameactive, menuactive, musicajatocando, tutorialactive, dificuldadeactive
+                gameactive = False
+                menuactive = True
+                tutorialactive = False    # força desativar tutorial
+                dificuldadeactive = False  # força desativar dificuldade
+                musicajatocando = False
+                resetar_jogo()
+                break
 
-            gameactive = False
-            menuactive = True
-            musicajatocando = False
-
-            resetar_jogo()
-            break
         if rect.top > ALTURA_TELA:
             rect.x = random.randint(0, LARGURA_TELA - rect.width)
-            rect.y = random.randint(-600, -64 if tipo == "carro" else -128)
+            rect.y = random.randint(-600, -64 if tipo == "carro" else -128 if tipo == "onibus" else -64)
             obstaculos[i] = (tipo, rect)
 
 def desenhar_boost():
@@ -284,6 +312,33 @@ while running:
                     dificuldadedojogo = 1
                     resetar_jogo()
 
+    # Atualiza timer da desaceleração antes do movimento
+    if desacelerado:
+        desacelera_timer -= ms
+        if desacelera_timer <= 0:
+            desacelerado = False
+            velocidade_atual = velocidade_base
+
+    # Usa velocidade atual + boost para movimentar
+    velocidade = velocidade_atual + (BOOST_VELOCIDADE_BONUS if boost_ativo else 0)
+    movimentar_carro(tecla, velocidade)
+
+    # Controle boost
+    if not boost_ativo:
+        boost_cooldown += ms
+        if boost_cooldown > BOOST_INTERVALO_MS:
+            boost_cooldown = BOOST_INTERVALO_MS
+        if boost_cooldown >= BOOST_INTERVALO_MS and (tecla[pygame.K_LSHIFT] or tecla[pygame.K_RSHIFT]):
+            boost_ativo = True
+            boost_duration = BOOST_DURACAO_MS
+            boost_cooldown = 0
+    else:
+        boost_duration -= ms
+        if boost_duration <= 0:
+            boost_ativo = False
+            boost_duration = 0
+            boost_cooldown = 0
+
     if menuactive:
         desenhar_menu()
     elif tutorialactive:
@@ -292,26 +347,6 @@ while running:
         desenhar_dificuldade(tecla)
     elif gameactive:
         display_surface.blit(mapa_bg, (0, 0))
-
-        if not boost_ativo:
-            boost_cooldown += ms
-            if boost_cooldown > BOOST_INTERVALO_MS:
-                boost_cooldown = BOOST_INTERVALO_MS
-        else:
-            boost_duration -= ms
-            if boost_duration <= 0:
-                boost_ativo = False
-                boost_duration = 0
-                boost_cooldown = 0
-
-        velocidade = 7 + (BOOST_VELOCIDADE_BONUS if boost_ativo else 0)
-        movimentar_carro(tecla, velocidade)
-
-        if boost_cooldown >= BOOST_INTERVALO_MS and (tecla[pygame.K_LSHIFT] or tecla[pygame.K_RSHIFT]):
-            boost_ativo = True
-            boost_duration = BOOST_DURACAO_MS
-            boost_cooldown = 0
-
         display_surface.blit(carro_img, carro_rect.topleft)
         desenhar_boost()
         atualizar_obstaculos()
