@@ -41,6 +41,9 @@ tutorial_bg = carregar_imagem_caminho("Downloads\\Images - Menu\\Botao_Tutorial.
 carro_img = carregar_imagem_caminho("Downloads\\Images - Sprites\\Carro_MC_V1.png", (64, 64))
 bolha_invincibilidade = carregar_imagem_caminho("Downloads\\Images - Sprites\\Bolha_Invincibilidade.png", (80, 80))
 
+# Nova imagem: moeda XP
+xp_moeda_img = carregar_imagem_caminho("Downloads\\Images - Sprites\\EXP_Token.png", (48, 48))
+
 # Fonte para textos
 fonte = pygame.font.SysFont(None, 36)
 
@@ -64,6 +67,10 @@ dificuldadedojogo = 0
 score = 0
 score_timer = 0
 
+xp_moeda_rect = None
+xp_tempo_ultimo_spawn = 0
+XP_SPAWN_INTERVAL_MS = 5000  # 5 segundos
+
 # Posições dos botões (hitboxes)
 hitboxbotaomenujogo = botao_menu_jogo.get_rect(topleft=(250, 300))
 hitboxbotaomenututorial = botao_menu_tutorial.get_rect(topleft=(575, 300))
@@ -84,11 +91,14 @@ boost_ativo = False
 
 def resetar_jogo():
     global carro_rect, obstaculos, score, score_timer, boost_cooldown, boost_duration, boost_ativo
+    global xp_moeda_rect, xp_tempo_ultimo_spawn
     score = 0
     score_timer = 0
     boost_cooldown = 0
     boost_duration = 0
     boost_ativo = False
+    xp_moeda_rect = None
+    xp_tempo_ultimo_spawn = 0
     carro_rect.center = (LARGURA_TELA // 2, ALTURA_TELA - 100)
     obstaculos.clear()
     for _ in range(5 * (dificuldadedojogo + 1)):
@@ -177,8 +187,14 @@ def desenhar_score():
 
 def desenhar_texto_boost():
     if boost_cooldown >= BOOST_INTERVALO_MS and not boost_ativo:
-        texto = fonte.render("Segure Shift para ativar o boost", True, BRANCO)
+        texto = fonte.render("Aperte o Shift para ativar o boost!", True, BRANCO)
         display_surface.blit(texto, (10, ALTURA_TELA - 40))
+
+def spawn_xp_moeda():
+    global xp_moeda_rect
+    x = random.randint(0, LARGURA_TELA - xp_moeda_img.get_width())
+    y = random.randint(0, ALTURA_TELA - xp_moeda_img.get_height())
+    xp_moeda_rect = xp_moeda_img.get_rect(topleft=(x, y))
 
 # Carregar sprites de obstáculos (sem escala para manter compatibilidade)
 carro_obstaculo_ciano = pygame.image.load("Downloads\\Images - Sprites\\Carro_Obstaculo_(Ciano).png")
@@ -281,6 +297,23 @@ while running:
         if score_timer >= 100:
             score += 1 * (dificuldadedojogo + 1)
             score_timer = 0
+
+        # Spawn moeda XP a cada 5 segundos
+        xp_tempo_ultimo_spawn += ms
+        if xp_moeda_rect is None and xp_tempo_ultimo_spawn >= XP_SPAWN_INTERVAL_MS:
+            spawn_xp_moeda()
+            xp_tempo_ultimo_spawn = 0
+
+        # Checa colisão do carro com moeda XP
+        if xp_moeda_rect and carro_rect.colliderect(xp_moeda_rect):
+            score += 1000  # Adiciona 1000 ao score ao coletar a moeda
+            xp_moeda_rect = None
+
+        # Desenha moeda XP se existir
+        if xp_moeda_rect:
+            display_surface.blit(xp_moeda_img, xp_moeda_rect.topleft)
+
+        # Desenha score
         desenhar_score()
 
         # Texto de boost disponível
