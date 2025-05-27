@@ -121,14 +121,23 @@ def resetar_jogo():
 
     for _ in range(quantidade):
         if dificuldadedojogo == 1:
-            tipo = random.choice(["carro", "onibus", "cone"])  # cone só no hard
+            tipo = random.choice(["carro", "onibus", "cone"])
         else:
-            tipo = random.choice(["carro", "onibus"])  # só carro e onibus no easy
-        w, h = (64, 64) if tipo == "carro" else (64, 128) if tipo == "onibus" else (64, 64)
+            tipo = random.choice(["carro", "onibus"])
         
+        # Define tamanho baseado no tipo
+        if tipo == "carro":
+            w, h = 64, 64
+        elif tipo == "onibus":
+            w, h = 64, 128
+        else:  # cone
+            w, h = 64, 64
+        
+        # Tenta encontrar posição válida sem colisão
+        tentativas = 0
         while True:
             x = random.randint(0, LARGURA_TELA - w)
-            y = random.randint(-600, -64 if tipo == "carro" else -128 if tipo == "onibus" else -64)
+            y = random.randint(-600, -64 if tipo == "carro" or tipo == "cone" else -128)
             novo_rect = pygame.Rect(x, y, w, h)
 
             colisao = any(novo_rect.colliderect(r[1]) for r in obstaculos_temp)
@@ -136,6 +145,11 @@ def resetar_jogo():
                 colisao = True
 
             if not colisao:
+                obstaculos_temp.append((tipo, novo_rect))
+                break
+
+            tentativas += 1
+            if tentativas > 100:
                 obstaculos_temp.append((tipo, novo_rect))
                 break
 
