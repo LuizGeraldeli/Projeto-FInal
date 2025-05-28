@@ -1,119 +1,169 @@
+# --- Bibliotecas ---
 import pygame
 import random
 
-# Inicializa pygame e mixer de áudio para sons
+# --- Inicialização do Pygame e Mixer de Áudio ---
 pygame.init()
 pygame.mixer.init()
-
 pygame.key.set_repeat(0)
 
-# Constantes e variáveis principais do jogo
-NADA = 1
+# --- Configurações da Tela ---
+largura_tela = 1024
+altura_tela = 512
+display_surface = pygame.display.set_mode((largura_tela, altura_tela))
+pygame.display.set_icon(pygame.image.load("Downloads2\\Images-Sprites\\Carro_MC_V2.png"))  # Ícone da janela
+pygame.display.set_caption('OverDrift.exe')
+
+# --- Parâmetros Gerais ---
+# Estado
+vida = 3
 dificuldadedojogo = 1
-maxscore = 0
-
-# Boost (dash) parâmetros
-DASH_VELOCIDADE_MULTIPLICADOR = 1.5
-DASH_DURACAO_MS = 2000  # duração do dash em milissegundos
-DASH_COOLDOWN_MS = 5000  # cooldown entre dashes
-
-dash = 1.0
-permissao_dash = True
-invencibilidade = False
-tempo_ultimo_dash = -DASH_COOLDOWN_MS  # inicializado para permitir dash imediato
-
-# Penalidade cone
-cone_penalidade_ativo = False
-cone_penalidade_timer = 0
-CONE_PENALIDADE_DURACAO_MS = 3000  # 3 segundos
-
-# Carrega músicas do menu e do jogo
-musicamenu = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\OMORI OST - 103 Gator Gambol.mp3")
-musicajogo = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
-
-# Flags para controlar estados das telas e pausa
 menuactive = True
 tutorialactive = False
 dificuldadeactive = False
 gameactive = False
-paused = False  # Controla pausa no jogo
+paused = False 
+running = True
 
-# Variáveis para tempo, pontuação e fonte de texto
+# Dash
+DASH_VELOCIDADE_MULTIPLICADOR = 1.5
+DASH_DURACAO_MS = 2000        # duração em ms
+DASH_COOLDOWN_MS = 5000       # cooldown em ms
+dash = 1.0
+permissao_dash = True
+invencibilidade = False
+tempo_ultimo_dash = -DASH_COOLDOWN_MS  
+dash_ativo = False
+dash_timer = 0
+
+# Cone
+cone_penalidade_ativo = False
+cone_penalidade_timer = 0
+CONE_PENALIDADE_DURACAO_MS = 3000  # 3 segundos
+
+# Power-up
+powerups = []
+MAX_POWERUPS = 3
+POWERUP_SPAWN_INTERVAL_MS = 5000  
+powerup_spawn_timer = 0
+
+# Pontuação
+maxscore = 0
 ms_total = 0
 second = 0
 score = 0
 score_timer = 0
-fonte = pygame.font.SysFont(None, 36)  # Fonte para exibir pontuação
+fonte = pygame.font.SysFont(None, 36) 
 
-# Configura o clock para manter o jogo a 60 FPS
-clock = pygame.time.Clock()
+# Relógio
+clock = pygame.time.Clock()  # 60 FPS
 
-# Carrega e redimensiona imagens dos botões do menu
+# Mixer
+pygame.init()
+pygame.mixer.init()
+pygame.key.set_repeat(0)
+musicajatocando = False
+
+# --- Assets ---
+# Botões Menu
 botao_menu_jogo = pygame.image.load("Downloads2\\Images-Menus\\Botao_Jogar.png")
 botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200, 80))
-
 botao_menu_tutorial = pygame.image.load("Downloads2\\Images-Menus\\Botao_Tutorial.png")
 botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200, 80))
-
 botao_dificuldade_easy = pygame.image.load("Downloads2\\Images-Menus\\Botao_Dificuldade_EasyV1.png")
 botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (256, 256))
-
 botao_dificuldade_hard = pygame.image.load("Downloads2\\Images-Menus\\Botao_Dificuldade_HardV1.png")
 botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (256, 256))
 
-# Easter egg: imagem do mago
+# Easter egg
 mago_eastergg = pygame.image.load("Downloads2\\Images-Sprites\\The Mage (IDK).png")
 mago_eastergg = pygame.transform.scale(mago_eastergg, (128, 128))
 
-# Carrega e ajusta imagens de planos de fundo
+# Plano de Fundo
 backgroundsize = (1024, 512)
 menu = pygame.image.load("Downloads2\\Images-Menus\\Overdrift_Menu.png")
 menu = pygame.transform.scale(menu, backgroundsize)
-
 mapa = pygame.image.load("Downloads2\\Images-Menus\\Overdriftmap_VF.png")
 mapa = pygame.transform.scale(mapa, backgroundsize)
-
 dificuldade = pygame.image.load("Downloads2\\Images-Menus\\Overdrift_dificulty_V0.png")
 dificuldade = pygame.transform.scale(dificuldade, backgroundsize)
-
 tutorial = pygame.image.load("Downloads2\\Images-Menus\\menu_question.png")
 tutorial = pygame.transform.scale(tutorial, backgroundsize)
 
-# Carrega sprites dos veículos e explosão, redimensionando conforme necessário
+# Veículos
 carro_mc = pygame.image.load("Downloads2\\Images-Sprites\\Carro_MC_V2.png")
 carro_mc = pygame.transform.scale(carro_mc, (36, 54))
-
 carro_obstaculo_ciano = pygame.image.load("Downloads2\\Images-Sprites\\Carro_Obstaculo_(Ciano).png")
 carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (28, 46))
 carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)  # Espelha verticalmente
-
 onibus_obstaculo_azul = pygame.image.load("Downloads2\\Images-Sprites\\Onibus_Obstaculo(Azul).png")
 onibus_obstaculo_azul = pygame.transform.scale(onibus_obstaculo_azul, (44, 108))
 
-explosao = pygame.image.load("Downloads2\\Images-Sprites\\Explosão_derrota.png")
-explosao = pygame.transform.scale(explosao, (128, 128))
-
-bolha_invencibilidade = pygame.image.load("Downloads2\\Images-Sprites\\Bolha_Invincibilidade.png")
-bolha_invencibilidade = pygame.transform.scale(bolha_invencibilidade, (75, 75))
-
+# Power-Ups
 powerup_token = pygame.image.load("Downloads2\\Images-Sprites\\EXP_Token.png")
 powerup_token = pygame.transform.scale(powerup_token, (36, 36))  
-
 chave_fenda_sprite = pygame.image.load("Downloads2\\Images-Sprites\\ChavedeFenda_Cura.png")
-chave_fenda_sprite = pygame.transform.scale(chave_fenda_sprite, (36, 36))
+chave_fenda_sprite = pygame.transform.scale(chave_fenda_sprite, (72, 72))
 
-# Sprite do cone
+# Obstáculos
 obstaculo_cone = pygame.image.load("Downloads2\\Images-Sprites\\Obstaculo_Cone.png")
 obstaculo_cone = pygame.transform.scale(obstaculo_cone, (28, 46))
 
-# Configura tela do jogo
-largura_tela = 1024
-altura_tela = 512
-display_surface = pygame.display.set_mode((largura_tela, altura_tela))
-pygame.display.set_icon(carro_mc)  # Ícone da janela
-pygame.display.set_caption('OverDrift.exe')
+# Efeitos
+explosao = pygame.image.load("Downloads2\\Images-Sprites\\Explosão_derrota.png")
+explosao = pygame.transform.scale(explosao, (128, 128))
+bolha_invencibilidade = pygame.image.load("Downloads2\\Images-Sprites\\Bolha_Invincibilidade.png")
+bolha_invencibilidade = pygame.transform.scale(bolha_invencibilidade, (75, 75))
 
-# Função para reiniciar o jogo, posicionar obstáculos e resetar pontuação
+# Músicas
+musicamenu = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
+
+# Estados das telas e pausa
+menuactive = True
+tutorialactive = False
+dificuldadeactive = False
+gameactive = False
+paused = False
+
+# --- Fonte para exibir textos ---
+fonte = pygame.font.SysFont(None, 36)
+
+# --- Carregamento de Sons ---
+musicamenu = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
+
+# --- Carregamento e redimensionamento das imagens ---
+
+# Backgrounds e menus
+backgroundsize = (largura_tela, altura_tela)
+menu = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Overdrift_Menu.png"), backgroundsize)
+mapa = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Overdriftmap_VF.png"), backgroundsize)
+dificuldade = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Overdrift_dificulty_V0.png"), backgroundsize)
+tutorial = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\menu_question.png"), backgroundsize)
+
+# Botões
+botao_menu_jogo = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Botao_Jogar.png"), (200, 80))
+botao_menu_tutorial = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Botao_Tutorial.png"), (200, 80))
+botao_dificuldade_easy = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Botao_Dificuldade_EasyV1.png"), (256, 256))
+botao_dificuldade_hard = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Menus\\Botao_Dificuldade_HardV1.png"), (256, 256))
+
+# Easter egg
+mago_eastergg = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\The Mage (IDK).png"), (128, 128))
+
+# Sprites de veículos e obstáculos
+carro_mc = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\Carro_MC_V2.png"), (36, 54))
+carro_obstaculo_ciano = pygame.transform.flip(pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\Carro_Obstaculo_(Ciano).png"), (28, 46)), False, True)
+onibus_obstaculo_azul = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\Onibus_Obstaculo(Azul).png"), (44, 108))
+obstaculo_cone = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\Obstaculo_Cone.png"), (28, 46))
+
+# Outros sprites
+explosao = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\Explosão_derrota.png"), (128, 128))
+bolha_invencibilidade = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\Bolha_Invincibilidade.png"), (75, 75))
+powerup_token = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\EXP_Token.png"), (36, 36))
+chave_fenda_sprite = pygame.transform.scale(pygame.image.load("Downloads2\\Images-Sprites\\ChavedeFenda_Cura.png"), (72, 72))
+
+# --- Função para resetar o jogo ---
 def resetar_jogo():
     global carro_rect, obstaculos, musicajatocando, score, score_timer, maxscore, vida
     score = 0
@@ -131,27 +181,13 @@ def resetar_jogo():
             obstaculo = obstaculo_cone.get_rect(topleft=(random.randint(0, largura_tela - 64), random.randint(-600, -64)))
         obstaculos.append((tipo, obstaculo))
     musicajatocando = False
-
 resetar_jogo()
 
-# Variáveis para controle de estado do dash
-dash_ativo = False
-dash_timer = 0
-
-# Variáveis controle power-up
-powerups = []
-MAX_POWERUPS = 1
-POWERUP_SPAWN_INTERVAL_MS = 5000  # intervalo para spawnar powerup
-powerup_spawn_timer = 0
-
-# Loop principal do jogo
-running = True
-musicajatocando = False
-
+# --- Loop Principal ---
 while running:
-    ms = clock.tick(60)  # Tempo em ms desde último frame
-    ms_total += ms
-    tecla = pygame.key.get_pressed()
+    ms = clock.tick(60)  # Tempo do último frame (ms)
+    ms_total += ms       # Tempo total acumulado (ms)
+    tecla = pygame.key.get_pressed()  # Teclas pressionadas
 
     # Controla música conforme estado do jogo
     if not gameactive and not musicajatocando:
@@ -165,7 +201,7 @@ while running:
         musicajatocando = True
 
     # Exibe telas conforme estado
-    if menuactive:
+    if menuactive: # Menu
         hitboxbotaomenujogo = botao_menu_jogo.get_rect(topleft=(250, 300))
         hitboxbotaomenututorial = botao_menu_tutorial.get_rect(topleft=(575, 300))
         display_surface.blit(menu, (0, 0))
@@ -174,10 +210,10 @@ while running:
         texto_maxscore = fonte.render(f"Max Score: {maxscore}", True, (255, 255, 255))
         display_surface.blit(texto_maxscore, (10, 10))
 
-    elif tutorialactive:
+    elif tutorialactive: # Tutorial
         display_surface.blit(tutorial, (0, 0))
 
-    elif dificuldadeactive:
+    elif dificuldadeactive: # Seleção Dificuldade
         hitboxbotaodificuldadeeasy = botao_dificuldade_easy.get_rect(topleft=(180, 210))
         hitboxbotaodificuldadehard = botao_dificuldade_hard.get_rect(topleft=(595, 210))
         display_surface.blit(dificuldade, (0, 0))
@@ -187,7 +223,7 @@ while running:
             display_surface.blit(mago_eastergg, (largura_tela - 128, altura_tela - 128))
             pygame.display.set_caption('Mago da internet! Parabéns em achar um easter egg!')
 
-    elif gameactive and not paused:
+    elif gameactive and not paused: # Jogo
         display_surface.blit(mapa, (0, 0))
 
         # Atualiza penalidade cone
@@ -308,10 +344,11 @@ while running:
         texto_vida = fonte.render(f"Vidas: {vida}", True, (255, 255, 255))
         display_surface.blit(texto_vida, (10, 10 + texto_score.get_height() + 5))  # 5px de espaço abaixo do score
 
-    else:
+    else: # Jogo Pausado
         texto_pause = fonte.render("PAUSADO - Aperte P ou ESC para voltar", True, (255, 255, 255))
         display_surface.blit(texto_pause, (260, 250))
 
+    # --- Processa Eventos ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -346,4 +383,5 @@ while running:
                     dificuldadedojogo = 2
                     resetar_jogo()
 
+    # Atualiza frame do jogo
     pygame.display.update()
