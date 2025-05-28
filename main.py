@@ -133,7 +133,7 @@ fonte = pygame.font.SysFont(None, 36)
 musicamenu = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\OMORI OST - 103 Gator Gambol.mp3")
 musicajogo = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
 
-# --- Carregamento e redimensionamento das imagens ---
+# --- Carregamento e Redimensionamento das imagens ---
 
 # Backgrounds e menus
 backgroundsize = (largura_tela, altura_tela)
@@ -235,7 +235,7 @@ while running:
         # Calcula velocidade final com dash e penalidade cone
         velocidade = 7 * dash
         if cone_penalidade_ativo:
-            velocidade *= 0.5
+            velocidade *= (1/2)
 
         second += ms / 1000
         score_timer += ms
