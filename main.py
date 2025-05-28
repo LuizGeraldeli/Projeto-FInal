@@ -380,7 +380,7 @@ while running:
                 elif hitboxbotaodificuldadehard.collidepoint(event.pos):
                     gameactive = True
                     dificuldadeactive = False
-                    dificuldadedojogo = 2
+                    dificuldadedojogo = 3
                     resetar_jogo()
 
     # Atualiza frame do jogo
