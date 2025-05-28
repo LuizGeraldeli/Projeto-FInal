@@ -13,9 +13,9 @@ dificuldadedojogo = 1
 maxscore = 0
 
 # Boost (dash) parâmetros
-DASH_VELOCIDADE_MULTIPLICADOR = 3.0
-DASH_DURACAO_MS = 300  # duração do dash em milissegundos
-DASH_COOLDOWN_MS = 1000  # cooldown entre dashes
+DASH_VELOCIDADE_MULTIPLICADOR = 1.5
+DASH_DURACAO_MS = 2000  # duração do dash em milissegundos
+DASH_COOLDOWN_MS = 5000  # cooldown entre dashes
 
 dash = 1.0
 permissao_dash = True
@@ -122,6 +122,7 @@ resetar_jogo()
 # Variáveis para controle de estado do dash
 dash_ativo = False
 dash_timer = 0
+invencibilidade = False 
 
 # Loop principal do jogo
 while True:
@@ -168,6 +169,9 @@ while True:
 
     # Jogo ativo e não pausado: lógica principal do jogo
     elif gameactive and not paused:
+        display_surface.blit(mapa, (0,0))  # Fundo do mapa
+
+        velocidade = 7 * dash
         second += ms/1000
         score_timer += ms
         if score_timer >= 10:
@@ -176,30 +180,38 @@ while True:
         if score >= maxscore:
             maxscore = score
 
-        display_surface.blit(mapa, (0,0))  # Fundo do mapa
-
-        # Controle do dash
+        # Controle do dash (boost)
         if dash_ativo:
+            # Durante o dash, decrementa o timer pelo tempo decorrido em ms
             dash_timer -= ms
             if dash_timer <= 0:
+                # Quando o timer acaba, termina o dash
                 dash_ativo = False
-                dash = 1.0
-                invincibilidade = False
+                dash = 1.0  # Volta a velocidade normal
+                invencibilidade = False  # Termina o estado de invencibilidade
+
+            # Desenha a bolha
+            bolha_pos = (carro_rect.centerx - bolha_invincibilidade.get_width()//2,
+                        carro_rect.centery - bolha_invincibilidade.get_height()//2)
+            display_surface.blit(bolha_invincibilidade, bolha_pos)
         else:
-            # Permite iniciar dash se cooldown já passou
-            if not permissao_dash and ms_total - tempo_ultimo_dash >= DASH_COOLDOWN_MS:
+            # Quando dash não está ativo, verifica se passou o cooldown para liberar novamente
+            if not permissao_dash and (ms_total - tempo_ultimo_dash) >= DASH_COOLDOWN_MS:
                 permissao_dash = True
 
-        velocidade = 7 * dash
+            # Se dash estiver disponível, exibe mensagem para o jogador
+            if permissao_dash:
+                texto_boost = fonte.render("Aperte o Shift para ativar o boost!", True, (255, 255, 255))
+                display_surface.blit(texto_boost, (10, altura_tela - 40))
 
-        # Ativa dash ao pressionar SHIFT se permitido e não em dash
-        if not dash_ativo and permissao_dash and (tecla[pygame.K_LSHIFT] or tecla[pygame.K_RSHIFT]):
-            dash_ativo = True
-            dash_timer = DASH_DURACAO_MS
-            permissao_dash = False
-            tempo_ultimo_dash = ms_total
-            dash = DASH_VELOCIDADE_MULTIPLICADOR
-            invincibilidade = True
+                # Ativa dash se o jogador pressionar SHIFT (esquerdo ou direito)
+                if (tecla[pygame.K_LSHIFT] or tecla[pygame.K_RSHIFT]) and not dash_ativo:
+                    dash_ativo = True
+                    dash_timer = DASH_DURACAO_MS  # Reseta timer do dash
+                    permissao_dash = False  # Desativa permissão para novo dash
+                    tempo_ultimo_dash = ms_total  # Marca o tempo do último dash para cooldown
+                    dash = DASH_VELOCIDADE_MULTIPLICADOR  # Aplica multiplicador de velocidade
+                    invencibilidade = True  # Ativa invencibilidade durante dash
 
         # Movimenta carro do jogador conforme teclas WASD
         if tecla[pygame.K_w]: carro_rect.y -= velocidade
@@ -208,13 +220,7 @@ while True:
         if tecla[pygame.K_d]: carro_rect.x += velocidade
         carro_rect.clamp_ip(display_surface.get_rect())  # Mantém carro dentro da tela
 
-        # Se dash ativo, desenha bolha de invencibilidade
-        if invincibilidade:
-            bolha_pos = (carro_rect.centerx - bolha_invincibilidade.get_width()//2,
-                         carro_rect.centery - bolha_invincibilidade.get_height()//2)
-            display_surface.blit(bolha_invincibilidade, bolha_pos)
-
-        display_surface.blit(carro_mc, carro_rect.topleft)  # Desenha o carro
+        display_surface.blit(carro_mc, carro_rect.topleft) # Desenha o carro (apos a bolha)
 
         # Atualiza posição e desenha obstáculos; checa colisão
         for tipo, obstaculo in obstaculos:
@@ -225,7 +231,7 @@ while True:
             else:
                 display_surface.blit(onibus_obstaculo_azul, obstaculo.topleft)
             # Verifica colisão entre jogador e obstáculo (se não invencível)
-            if carro_rect.colliderect(obstaculo) and not invincibilidade:
+            if carro_rect.colliderect(obstaculo) and not dash_ativo:
                 display_surface.blit(explosao, carro_rect.topleft)  # Mostra explosão
                 pygame.display.update()
                 pygame.time.delay(1000)  # Pausa 1 segundo
