@@ -19,12 +19,17 @@ DASH_COOLDOWN_MS = 5000  # cooldown entre dashes
 
 dash = 1.0
 permissao_dash = True
-invincibilidade = False
+invencibilidade = False
 tempo_ultimo_dash = -DASH_COOLDOWN_MS  # inicializado para permitir dash imediato
 
+# Penalidade cone
+cone_penalidade_ativo = False
+cone_penalidade_timer = 0
+CONE_PENALIDADE_DURACAO_MS = 3000  # 3 segundos
+
 # Carrega músicas do menu e do jogo
-musicamenu = pygame.mixer.Sound("Downloads2\Audio-Musicas\OMORI OST - 103 Gator Gambol.mp3")
-musicajogo = pygame.mixer.Sound("Downloads2\Audio-Musicas\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
+musicamenu = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\OMORI OST - 103 Gator Gambol.mp3")
+musicajogo = pygame.mixer.Sound("Downloads2\\Audio-Musicas\\Deltarune Chapter 2 OST_ 35 - Knock You Down !!.mp3")
 
 # Flags para controlar estados das telas e pausa
 menuactive = True
@@ -42,55 +47,58 @@ fonte = pygame.font.SysFont(None, 36)  # Fonte para exibir pontuação
 
 # Configura o clock para manter o jogo a 60 FPS
 clock = pygame.time.Clock()
-clock.tick(60)
 
 # Carrega e redimensiona imagens dos botões do menu
-botao_menu_jogo = pygame.image.load("Downloads2\Images-Menus\Botao_Jogar.png")
-botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200,80))
+botao_menu_jogo = pygame.image.load("Downloads2\\Images-Menus\\Botao_Jogar.png")
+botao_menu_jogo = pygame.transform.scale(botao_menu_jogo, (200, 80))
 
-botao_menu_tutorial = pygame.image.load("Downloads2\Images-Menus\Botao_Tutorial.png")
-botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200,80))
+botao_menu_tutorial = pygame.image.load("Downloads2\\Images-Menus\\Botao_Tutorial.png")
+botao_menu_tutorial = pygame.transform.scale(botao_menu_tutorial, (200, 80))
 
-botao_dificuldade_easy = pygame.image.load("Downloads2\Images-Menus\Botao_Dificuldade_EasyV1.png")
-botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (256,256))
+botao_dificuldade_easy = pygame.image.load("Downloads2\\Images-Menus\\Botao_Dificuldade_EasyV1.png")
+botao_dificuldade_easy = pygame.transform.scale(botao_dificuldade_easy, (256, 256))
 
-botao_dificuldade_hard = pygame.image.load("Downloads2\Images-Menus\Botao_Dificuldade_HardV1.png")
-botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (256,256))
+botao_dificuldade_hard = pygame.image.load("Downloads2\\Images-Menus\\Botao_Dificuldade_HardV1.png")
+botao_dificuldade_hard = pygame.transform.scale(botao_dificuldade_hard, (256, 256))
 
 # Easter egg: imagem do mago
-mago_eastergg = pygame.image.load("Downloads2\Images-Sprites\The Mage (IDK).png")
+mago_eastergg = pygame.image.load("Downloads2\\Images-Sprites\\The Mage (IDK).png")
 mago_eastergg = pygame.transform.scale(mago_eastergg, (128, 128))
 
 # Carrega e ajusta imagens de planos de fundo
-backgroundsize = (1024,512)
-menu = pygame.image.load("Downloads2\Images-Menus\Overdrift_Menu.png")
+backgroundsize = (1024, 512)
+menu = pygame.image.load("Downloads2\\Images-Menus\\Overdrift_Menu.png")
 menu = pygame.transform.scale(menu, backgroundsize)
 
-mapa = pygame.image.load("Downloads2\Images-Menus\Overdriftmap_VF.png")
+mapa = pygame.image.load("Downloads2\\Images-Menus\\Overdriftmap_VF.png")
 mapa = pygame.transform.scale(mapa, backgroundsize)
 
-dificuldade = pygame.image.load("Downloads2\Images-Menus\Overdrift_dificulty_V0.png")
+dificuldade = pygame.image.load("Downloads2\\Images-Menus\\Overdrift_dificulty_V0.png")
 dificuldade = pygame.transform.scale(dificuldade, backgroundsize)
 
-tutorial = pygame.image.load("Downloads2\Images-Menus\menu_question.png")
+tutorial = pygame.image.load("Downloads2\\Images-Menus\\menu_question.png")
 tutorial = pygame.transform.scale(tutorial, backgroundsize)
 
 # Carrega sprites dos veículos e explosão, redimensionando conforme necessário
-carro_mc = pygame.image.load("Downloads2\Images-Sprites\Carro_MC_V2.png")
+carro_mc = pygame.image.load("Downloads2\\Images-Sprites\\Carro_MC_V2.png")
 carro_mc = pygame.transform.scale(carro_mc, (36, 54))
 
-carro_obstaculo_ciano = pygame.image.load("Downloads2\Images-Sprites\Carro_Obstaculo_(Ciano).png")
+carro_obstaculo_ciano = pygame.image.load("Downloads2\\Images-Sprites\\Carro_Obstaculo_(Ciano).png")
 carro_obstaculo_ciano = pygame.transform.scale(carro_obstaculo_ciano, (28, 46))
 carro_obstaculo_ciano = pygame.transform.flip(carro_obstaculo_ciano, False, True)  # Espelha verticalmente
 
-onibus_obstaculo_azul = pygame.image.load("Downloads2\Images-Sprites\Onibus_Obstaculo(Azul).png")
+onibus_obstaculo_azul = pygame.image.load("Downloads2\\Images-Sprites\\Onibus_Obstaculo(Azul).png")
 onibus_obstaculo_azul = pygame.transform.scale(onibus_obstaculo_azul, (44, 108))
 
-explosao = pygame.image.load("Downloads2\Images-Sprites\Explosão_derrota.png")
+explosao = pygame.image.load("Downloads2\\Images-Sprites\\Explosão_derrota.png")
 explosao = pygame.transform.scale(explosao, (128, 128))
 
-bolha_invincibilidade = pygame.image.load("Downloads2\Images-Sprites\Bolha_Invincibilidade.png")
-bolha_invincibilidade = pygame.transform.scale(bolha_invincibilidade, (50, 50))
+bolha_invencibilidade = pygame.image.load("Downloads2\\Images-Sprites\\Bolha_Invincibilidade.png")
+bolha_invencibilidade = pygame.transform.scale(bolha_invencibilidade, (50, 50))
+
+# Sprite do cone
+obstaculo_cone = pygame.image.load("Downloads2\\Images-Sprites\\Obstaculo_Cone.png")
+obstaculo_cone = pygame.transform.scale(obstaculo_cone, (28, 46))
 
 # Configura tela do jogo
 largura_tela = 1024
@@ -104,16 +112,16 @@ def resetar_jogo():
     global carro_rect, obstaculos, musicajatocando, score, score_timer, maxscore
     score = 0
     score_timer = 0
-    # Define posição inicial do carro do jogador
-    carro_rect = carro_mc.get_rect(center=(512, 400)) 
+    carro_rect = carro_mc.get_rect(center=(512, 400))
     obstaculos = []
-    # Cria obstáculos (carros ou ônibus) em posições aleatórias fora da tela
-    for _ in range(5 * dificuldadedojogo):
-        tipo = random.choice(["carro", "onibus"])
+    for _ in range(10 * dificuldadedojogo):
+        tipo = random.choice(["carro", "onibus", "cone"])
         if tipo == "carro":
-            obstaculo = carro_obstaculo_ciano.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -64)))
-        else:
-            obstaculo = onibus_obstaculo_azul.get_rect(topleft=(random.randint(0, largura_tela-64), random.randint(-600, -128)))
+            obstaculo = carro_obstaculo_ciano.get_rect(topleft=(random.randint(0, largura_tela - 64), random.randint(-600, -64)))
+        elif tipo == "onibus":
+            obstaculo = onibus_obstaculo_azul.get_rect(topleft=(random.randint(0, largura_tela - 64), random.randint(-600, -128)))
+        else:  # cone
+            obstaculo = obstaculo_cone.get_rect(topleft=(random.randint(0, largura_tela - 64), random.randint(-600, -64)))
         obstaculos.append((tipo, obstaculo))
     musicajatocando = False
 
@@ -122,26 +130,29 @@ resetar_jogo()
 # Variáveis para controle de estado do dash
 dash_ativo = False
 dash_timer = 0
-invencibilidade = False 
+invencibilidade = False
 
 # Loop principal do jogo
-while True:
-    ms = clock.tick(60)  # Tempo em ms desde último frame, para controle de velocidade
-    ms_total += ms
-    tecla = pygame.key.get_pressed()  # Captura teclas pressionadas
+running = True
+musicajatocando = False
 
-    # Controla música dependendo do estado do jogo
+while running:
+    ms = clock.tick(60)  # Tempo em ms desde último frame
+    ms_total += ms
+    tecla = pygame.key.get_pressed()
+
+    # Controla música conforme estado do jogo
     if not gameactive and not musicajatocando:
         pygame.mixer.stop()
         pygame.mixer.music.set_volume(0.0001)
-        musicamenu.play(-1)  # Toca música do menu em loop
+        musicamenu.play(-1)
         musicajatocando = True
     elif gameactive and not musicajatocando:
         pygame.mixer.stop()
-        musicajogo.play(-1)  # Toca música do jogo em loop
+        musicajogo.play(-1)
         musicajatocando = True
 
-    # Exibe tela de menu com botões de iniciar jogo e tutorial
+    # Exibe telas conforme estado
     if menuactive:
         hitboxbotaomenujogo = botao_menu_jogo.get_rect(topleft=(250, 300))
         hitboxbotaomenututorial = botao_menu_tutorial.get_rect(topleft=(575, 300))
@@ -151,28 +162,34 @@ while True:
         texto_maxscore = fonte.render(f"Max Score: {maxscore}", True, (255, 255, 255))
         display_surface.blit(texto_maxscore, (10, 10))
 
-    # Exibe tela do tutorial 
     elif tutorialactive:
-        display_surface.blit(tutorial, (0,0))
+        display_surface.blit(tutorial, (0, 0))
 
-    # Exibe seleção de dificuldade com botões
     elif dificuldadeactive:
         hitboxbotaodificuldadeeasy = botao_dificuldade_easy.get_rect(topleft=(180, 210))
         hitboxbotaodificuldadehard = botao_dificuldade_hard.get_rect(topleft=(595, 210))
-        display_surface.blit(dificuldade, (0,0))
+        display_surface.blit(dificuldade, (0, 0))
         display_surface.blit(botao_dificuldade_easy, (180, 210))
         display_surface.blit(botao_dificuldade_hard, (595, 210))
-        # Easter egg: se teclas M, A e G pressionadas, mostra imagem do mago e muda título da janela
         if tecla[pygame.K_m] and tecla[pygame.K_a] and tecla[pygame.K_g]:
-            display_surface.blit(mago_eastergg, (largura_tela-128, altura_tela-128))
+            display_surface.blit(mago_eastergg, (largura_tela - 128, altura_tela - 128))
             pygame.display.set_caption('Mago da internet! Parabéns em achar um easter egg!')
 
-    # Jogo ativo e não pausado: lógica principal do jogo
     elif gameactive and not paused:
-        display_surface.blit(mapa, (0,0))  # Fundo do mapa
+        display_surface.blit(mapa, (0, 0))
 
+        # Atualiza penalidade cone
+        if cone_penalidade_ativo:
+            cone_penalidade_timer -= ms
+            if cone_penalidade_timer <= 0:
+                cone_penalidade_ativo = False
+
+        # Calcula velocidade final com dash e penalidade cone
         velocidade = 7 * dash
-        second += ms/1000
+        if cone_penalidade_ativo:
+            velocidade *= 0.5
+
+        second += ms / 1000
         score_timer += ms
         if score_timer >= 10:
             score += 1 * dificuldadedojogo
@@ -180,101 +197,89 @@ while True:
         if score >= maxscore:
             maxscore = score
 
-        # Controle do dash (boost)
         if dash_ativo:
-            # Durante o dash, decrementa o timer pelo tempo decorrido em ms
             dash_timer -= ms
             if dash_timer <= 0:
-                # Quando o timer acaba, termina o dash
                 dash_ativo = False
-                dash = 1.0  # Volta a velocidade normal
-                invencibilidade = False  # Termina o estado de invencibilidade
-
-            # Desenha a bolha
-            bolha_pos = (carro_rect.centerx - bolha_invincibilidade.get_width()//2,
-                        carro_rect.centery - bolha_invincibilidade.get_height()//2)
-            display_surface.blit(bolha_invincibilidade, bolha_pos)
+                dash = 1.0
+                invencibilidade = False
+            bolha_pos = (carro_rect.centerx - bolha_invencibilidade.get_width() // 2,
+                         carro_rect.centery - bolha_invencibilidade.get_height() // 2)
+            display_surface.blit(bolha_invencibilidade, bolha_pos)
         else:
-            # Quando dash não está ativo, verifica se passou o cooldown para liberar novamente
             if not permissao_dash and (ms_total - tempo_ultimo_dash) >= DASH_COOLDOWN_MS:
                 permissao_dash = True
-
-            # Se dash estiver disponível, exibe mensagem para o jogador
             if permissao_dash:
                 texto_boost = fonte.render("Aperte o Shift para ativar o boost!", True, (255, 255, 255))
                 display_surface.blit(texto_boost, (10, altura_tela - 40))
-
-                # Ativa dash se o jogador pressionar SHIFT (esquerdo ou direito)
                 if (tecla[pygame.K_LSHIFT] or tecla[pygame.K_RSHIFT]) and not dash_ativo:
                     dash_ativo = True
-                    dash_timer = DASH_DURACAO_MS  # Reseta timer do dash
-                    permissao_dash = False  # Desativa permissão para novo dash
-                    tempo_ultimo_dash = ms_total  # Marca o tempo do último dash para cooldown
-                    dash = DASH_VELOCIDADE_MULTIPLICADOR  # Aplica multiplicador de velocidade
-                    invencibilidade = True  # Ativa invencibilidade durante dash
+                    dash_timer = DASH_DURACAO_MS
+                    permissao_dash = False
+                    tempo_ultimo_dash = ms_total
+                    dash = DASH_VELOCIDADE_MULTIPLICADOR
+                    invencibilidade = True
 
-        # Movimenta carro do jogador conforme teclas WASD
         if tecla[pygame.K_w]: carro_rect.y -= velocidade
         if tecla[pygame.K_s]: carro_rect.y += velocidade
         if tecla[pygame.K_a]: carro_rect.x -= velocidade
         if tecla[pygame.K_d]: carro_rect.x += velocidade
-        carro_rect.clamp_ip(display_surface.get_rect())  # Mantém carro dentro da tela
+        carro_rect.clamp_ip(display_surface.get_rect())
 
-        display_surface.blit(carro_mc, carro_rect.topleft) # Desenha o carro (apos a bolha)
+        display_surface.blit(carro_mc, carro_rect.topleft)
 
-        # Atualiza posição e desenha obstáculos; checa colisão
-        for tipo, obstaculo in obstaculos:
-            obstaculo.y += 5  # Obstáculos descem na tela
-            # Exibe sprite do obstáculo conforme tipo
+        # Atualiza posição, desenha obstáculos e verifica colisões
+        for i, (tipo, obstaculo) in enumerate(obstaculos):
+            obstaculo.y += 5
             if tipo == "carro":
                 display_surface.blit(carro_obstaculo_ciano, obstaculo.topleft)
-            else:
+            elif tipo == "onibus":
                 display_surface.blit(onibus_obstaculo_azul, obstaculo.topleft)
-            # Verifica colisão entre jogador e obstáculo (se não invencível)
+            elif tipo == "cone":
+                display_surface.blit(obstaculo_cone, obstaculo.topleft)
+
             if carro_rect.colliderect(obstaculo) and not dash_ativo:
-                display_surface.blit(explosao, carro_rect.topleft)  # Mostra explosão
-                pygame.display.update()
-                pygame.time.delay(1000)  # Pausa 1 segundo
-                gameactive = False
-                menuactive = True
-                resetar_jogo()
-                break
-            # Reposiciona obstáculos que saem da tela, para reaparecerem no topo
+                if tipo == "cone":
+                    cone_penalidade_ativo = True
+                    cone_penalidade_timer = CONE_PENALIDADE_DURACAO_MS
+                    obstaculo.y = altura_tela + 100  # Remove cone temporariamente
+                else:
+                    display_surface.blit(explosao, carro_rect.topleft)
+                    pygame.display.update()
+                    pygame.time.delay(1000)
+                    gameactive = False
+                    menuactive = True
+                    resetar_jogo()
+                    break
+
             if obstaculo.top > altura_tela:
                 obstaculo.y = random.randint(-600, -64)
-                obstaculo.x = random.randint(0, largura_tela-64)
+                obstaculo.x = random.randint(0, largura_tela - 64)
 
-        # Exibe pontuação na tela
+            obstaculos[i] = (tipo, obstaculo)
+
         texto_score = fonte.render(f"Score: {score}", True, (255, 255, 255))
         display_surface.blit(texto_score, (10, 10))
 
-    # Tela de pausa ativa
-    else :
+    else:
         texto_pause = fonte.render("PAUSADO - Aperte P ou ESC para voltar", True, (255, 255, 255))
         display_surface.blit(texto_pause, (260, 250))
 
-    # Eventos de teclado e mouse
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             pygame.quit()
             exit()
-
         if event.type == pygame.KEYDOWN:
-            # Saída do tutorial para menu
             if tutorialactive:
                 menuactive = True
                 tutorialactive = False
-            # Voltar da tela de dificuldade para o menu com ESC
             if dificuldadeactive and event.key == pygame.K_ESCAPE:
                 menuactive = True
                 dificuldadeactive = False
-            # Alterna pausa ao pressionar P ou ESC no jogo
             if gameactive and event.key in [pygame.K_p, pygame.K_ESCAPE]:
                 paused = not paused
-
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Clique em botões do menu, tutorial e dificuldade
             if menuactive:
                 if hitboxbotaomenujogo.collidepoint(event.pos):
                     menuactive = False
@@ -294,4 +299,4 @@ while True:
                     dificuldadedojogo = 2
                     resetar_jogo()
 
-    pygame.display.update()  # Atualiza a tela
+    pygame.display.update()
