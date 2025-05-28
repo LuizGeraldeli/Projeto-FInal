@@ -256,14 +256,18 @@ while running:
                     cone_penalidade_timer = CONE_PENALIDADE_DURACAO_MS
                     obstaculo.y = altura_tela + 100  # Remove cone temporariamente
                 else:
-                    display_surface.blit(explosao, carro_rect.topleft)
-                    pygame.display.update()
-                    pygame.time.delay(1000)
-                    gameactive = False
-                    menuactive = True
-                    resetar_jogo()
-                    break
+                    vida -= 1
+                    obstaculo.y = altura_tela + 100 #Reposiciona carro para evitar morte instantanea
 
+                    if vida <= 0:
+                        display_surface.blit(explosao, carro_rect.topleft)
+                        pygame.display.update()
+                        pygame.time.delay(1000)
+                        gameactive = False
+                        menuactive = True
+                        resetar_jogo()
+                        break
+                        
             if obstaculo.top > altura_tela:
                 obstaculo.y = random.randint(-600, -64)
                 obstaculo.x = random.randint(0, largura_tela - 64)
@@ -300,6 +304,9 @@ while running:
 
         texto_score = fonte.render(f"Score: {score}", True, (255, 255, 255))
         display_surface.blit(texto_score, (10, 10))
+
+        texto_vida = fonte.render(f"Vidas: {vida}", True, (255, 255, 255))
+        display_surface.blit(texto_vida, (10, 10 + texto_score.get_height() + 5))  # 5px de espaço abaixo do score
 
     else:
         texto_pause = fonte.render("PAUSADO - Aperte P ou ESC para voltar", True, (255, 255, 255))
