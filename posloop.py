@@ -94,7 +94,10 @@ explosao = pygame.image.load("Downloads2\\Images-Sprites\\Explosão_derrota.png"
 explosao = pygame.transform.scale(explosao, (128, 128))
 
 bolha_invencibilidade = pygame.image.load("Downloads2\\Images-Sprites\\Bolha_Invincibilidade.png")
-bolha_invencibilidade = pygame.transform.scale(bolha_invencibilidade, (50, 50))
+bolha_invencibilidade = pygame.transform.scale(bolha_invencibilidade, (75, 75))
+
+powerup_token = pygame.image.load("Downloads2\\Images-Sprites\\EXP_Token.png")
+powerup_token = pygame.transform.scale(powerup_token, (36, 36))  # Ajuste tamanho se quiser
 
 # Sprite do cone
 obstaculo_cone = pygame.image.load("Downloads2\\Images-Sprites\\Obstaculo_Cone.png")
@@ -130,7 +133,12 @@ resetar_jogo()
 # Variáveis para controle de estado do dash
 dash_ativo = False
 dash_timer = 0
-invencibilidade = False
+
+# Variáveis controle power-up
+powerups = []
+MAX_POWERUPS = 1
+POWERUP_SPAWN_INTERVAL_MS = 5000  # intervalo para spawnar powerup
+powerup_spawn_timer = 0
 
 # Loop principal do jogo
 running = True
@@ -257,6 +265,28 @@ while running:
                 obstaculo.x = random.randint(0, largura_tela - 64)
 
             obstaculos[i] = (tipo, obstaculo)
+
+        #Gerar powerup
+        powerup_spawn_timer += ms
+        if powerup_spawn_timer >= POWERUP_SPAWN_INTERVAL_MS:
+            if len(powerups) < MAX_POWERUPS:
+                largura, altura = powerup_token.get_size()
+                x = random.randint(0, largura_tela - largura)
+                y = random.randint(0, altura_tela - altura)
+                novo_rect = pygame.Rect(x, y, largura, altura)
+                powerups.append(("bola_xp", novo_rect))
+            powerup_spawn_timer = 0
+        
+        # Atualiza posição, desenha powerups e verifica colisões
+        for i, (tipo, powerup_rect) in enumerate(powerups):
+            if tipo == "bola_xp":
+                display_surface.blit(powerup_token, powerup_rect.topleft)
+
+            # Verifica colisão com o jogador
+            if carro_rect.colliderect(powerup_rect):
+                score += 500
+                powerups.pop(i)  # ou del powerups[i]
+                break
 
         texto_score = fonte.render(f"Score: {score}", True, (255, 255, 255))
         display_surface.blit(texto_score, (10, 10))
