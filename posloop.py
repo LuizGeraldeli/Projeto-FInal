@@ -97,7 +97,10 @@ bolha_invencibilidade = pygame.image.load("Downloads2\\Images-Sprites\\Bolha_Inv
 bolha_invencibilidade = pygame.transform.scale(bolha_invencibilidade, (75, 75))
 
 powerup_token = pygame.image.load("Downloads2\\Images-Sprites\\EXP_Token.png")
-powerup_token = pygame.transform.scale(powerup_token, (36, 36))  # Ajuste tamanho se quiser
+powerup_token = pygame.transform.scale(powerup_token, (36, 36))  
+
+chave_fenda_sprite = pygame.image.load("Downloads2\\Images-Sprites\\ChavedeFenda_Cura.png")
+chave_fenda_sprite = pygame.transform.scale(chave_fenda_sprite, (36, 36))
 
 # Sprite do cone
 obstaculo_cone = pygame.image.load("Downloads2\\Images-Sprites\\Obstaculo_Cone.png")
@@ -112,9 +115,10 @@ pygame.display.set_caption('OverDrift.exe')
 
 # Função para reiniciar o jogo, posicionar obstáculos e resetar pontuação
 def resetar_jogo():
-    global carro_rect, obstaculos, musicajatocando, score, score_timer, maxscore
+    global carro_rect, obstaculos, musicajatocando, score, score_timer, maxscore, vida
     score = 0
     score_timer = 0
+    vida = 3
     carro_rect = carro_mc.get_rect(center=(512, 400))
     obstaculos = []
     for _ in range(10 * dificuldadedojogo):
@@ -270,22 +274,28 @@ while running:
         powerup_spawn_timer += ms
         if powerup_spawn_timer >= POWERUP_SPAWN_INTERVAL_MS:
             if len(powerups) < MAX_POWERUPS:
-                largura, altura = powerup_token.get_size()
+                largura, altura = 36, 36  # tamanho padrão para os powerups
                 x = random.randint(0, largura_tela - largura)
                 y = random.randint(0, altura_tela - altura)
                 novo_rect = pygame.Rect(x, y, largura, altura)
-                powerups.append(("bola_xp", novo_rect))
+                tipo_powerup = random.choice(["bola_xp", "chave_fenda"])
+                powerups.append((tipo_powerup, novo_rect))
             powerup_spawn_timer = 0
         
         # Atualiza posição, desenha powerups e verifica colisões
         for i, (tipo, powerup_rect) in enumerate(powerups):
             if tipo == "bola_xp":
                 display_surface.blit(powerup_token, powerup_rect.topleft)
+            elif tipo == "chave_fenda":
+                display_surface.blit(chave_fenda_sprite, powerup_rect.topleft)
 
-            # Verifica colisão com o jogador
             if carro_rect.colliderect(powerup_rect):
-                score += 500
-                powerups.pop(i)  # ou del powerups[i]
+                if tipo == "bola_xp":
+                    score += 500
+                elif tipo == "chave_fenda":
+                    if vida < 3:
+                        vida += 1
+                powerups.pop(i)
                 break
 
         texto_score = fonte.render(f"Score: {score}", True, (255, 255, 255))
